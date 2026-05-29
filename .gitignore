@@ -22,3 +22,6 @@ Thumbs.db
 
 # --- Logs ---
 *.log
+
+# --- Claude Code session state (not part of submission) ---
+.claude/
