@@ -1,0 +1,221 @@
+---
+title: "Superstore Retail Performance and State-Level Socioeconomic Context"
+subtitle: "ETW2001 Assignment 2"
+author: "Yawen Sun  |  Student ID: 35734558"
+date: "May 2026"
+format:
+  pdf:
+    geometry: "top=1.8cm, bottom=1.8cm, left=2cm, right=2cm"
+    fontsize: 10pt
+    linestretch: 1.15
+    toc: false
+    number-sections: false
+    fig-pos: "H"
+    fig-width: 6.2
+    fig-height: 3.2
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r setup}
+library(ggplot2); library(dplyr); library(scales); library(knitr)
+ss   <- read.csv("../clean_dashboard_data.csv", stringsAsFactors=FALSE)
+ss$Order.Date <- as.Date(ss$Order.Date)
+ss$Year       <- as.integer(format(ss$Order.Date, "%Y"))
+pop  <- read.csv("../data/population_by_state.csv", stringsAsFactors=FALSE)
+inc  <- read.csv("../data/income_by_state.csv",     stringsAsFactors=FALSE)
+unemp<- read.csv("../data/unemployment_by_state.csv", stringsAsFactors=FALSE)
+econ <- ss %>% group_by(State) %>%
+  summarise(Total_Sales=sum(Sales), Total_Profit=sum(Profit),
+            Profit_Margin=sum(Profit)/sum(Sales), .groups="drop") %>%
+  left_join(pop,                              by="State") %>%
+  left_join(inc[,c("State","Median_Household_Income")],  by="State") %>%
+  left_join(unemp[,c("State","Unemployment_Rate")], by="State")
+th <- theme_minimal(base_size=9) +
+  theme(plot.title=element_text(face="bold",size=10),
+        plot.caption=element_text(size=7,colour="grey55"))
+```
+
+\newpage
+
+## Page 1 — Dashboard Screenshot
+
+![R Shiny dashboard showing three interactive tabs — Overview (five core charts, six sidebar filters), Economic Context (three external-dataset charts), and Data Table. All visualisations update dynamically with filter changes.](dashboard_screenshot.png){width=100%}
+
+\newpage
+
+## Page 2 — Problem Design
+
+**Research Question:** *How do US state-level socioeconomic factors — population size, median household income, and unemployment rate — relate to retail sales performance, profit margins, and discount patterns across regions in the Superstore dataset (2011–2014)?*
+
+Retail performance is influenced by both internal operations and external market conditions. States with larger populations, stronger consumer incomes, and lower unemployment are expected to generate higher demand and support healthier margins. This analysis contextualises Superstore transaction data with three authoritative external datasets to explore whether observable sales and profitability patterns are consistent with state-level economic characteristics.
+
+The study covers 49 US states and the District of Columbia across 2011–2014. External indicators are drawn from 2022–2024 sources; because state economic rankings are broadly stable over time, these are treated as contextual proxies rather than matched time-series predictors. All associations are descriptive — no causal claims are made.
+
+**Scope:** Five visualisations address sales concentration, discount behaviour, time trends, category mix, and regional patterns. An Economic Context tab in the dashboard links Superstore performance directly to the three external datasets.
+
+\newpage
+
+## Page 3 — Dataset Selection
+
+```{r provenance}
+prov <- data.frame(
+  Dataset=c("US State Population","Median Household Income","State Unemployment Rates"),
+  Source=c("US Census Bureau (NST-EST2025-POP)","US Census ACS 1-Year Estimates","BLS LAUS Program"),
+  Year=c("2024","2022","2022"), Unit=c("Persons","USD","% rate"),
+  `Join Key`=c("State","State","State"),
+  Justification=c(
+    "Population proxies market size; larger states expected to show higher absolute sales volumes.",
+    "Income reflects consumer spending capacity and is associated with demand for higher-margin goods.",
+    "Unemployment indicates economic stress; may correlate with compressed margins or discount pressure."
+  ), check.names=FALSE)
+kable(prov, caption="External Dataset Provenance", booktabs=TRUE)
+```
+
+**References**
+
+US Census Bureau (2026). *Annual Estimates of the Resident Population: April 1, 2020 to July 1, 2025* (NST-EST2025-POP). https://www.census.gov/data/tables/time-series/demo/popest/2020s-state-total.html
+US Census Bureau (2023). *ACS 1-Year Estimates, Table B19013: Median Household Income*, 2022. https://data.census.gov
+US Bureau of Labor Statistics (2023). *LAUS State Annual Average Unemployment Rates*, 2022. https://www.bls.gov/lau/
+
+\newpage
+
+## Page 4 — Visualisation 1: Top 10 States by Sales
+
+```{r fig1}
+top10 <- ss %>% group_by(State) %>% summarise(S=sum(Sales),.groups="drop") %>%
+  arrange(desc(S)) %>% slice_head(n=10)
+ggplot(top10,aes(reorder(State,S),S))+geom_col(fill="#2980b9")+coord_flip()+
+  scale_y_continuous(labels=dollar_format(scale=1e-3,suffix="K"))+
+  labs(title="Fig 1 — Top 10 States by Total Retail Sales (2011–2014)",
+       x=NULL,y="Total Sales (USD thousands)",caption="Source: Superstore dataset.")+th
+```
+
+**Interpretation.** California, New York, and Texas account for the largest share of total sales — a pattern consistent with their status as the three most populous US states (US Census Bureau, NST-EST2025-POP). Sales concentration in high-population states suggests that market size is a primary driver of retail volume. Pennsylvania and Florida outperform their population rank somewhat, possibly reflecting stronger logistics infrastructure or concentrated corporate buyer activity. For resource allocation, weighting operational investment toward large-population states is likely to maximise absolute return, though the Economic Context charts in the dashboard reveal that absolute sales do not guarantee proportionally higher margins.
+
+\newpage
+
+## Page 5 — Visualisation 2: Discount Rate vs Profit Margin
+
+```{r fig2}
+ggplot(ss,aes(Discount,Profit_Margin,colour=Category))+
+  geom_point(alpha=0.25,size=0.8)+geom_smooth(method="lm",se=FALSE,linewidth=0.9)+
+  scale_x_continuous(labels=percent_format())+
+  scale_y_continuous(labels=percent_format(),limits=c(-2,1))+
+  scale_colour_manual(values=c("#2980b9","#27ae60","#e74c3c"))+
+  labs(title="Fig 2 — Discount Rate vs Profit Margin by Category (2011–2014)",
+       x="Discount Rate",y="Profit Margin",colour=NULL,
+       caption="Source: Superstore dataset. Lines are OLS regression fits by category.")+th
+```
+
+**Interpretation.** A consistent negative association between discount rate and profit margin is visible across all three product categories. Furniture shows the steepest decline, with many transactions above 30% discount producing negative margins. Technology maintains positive margins at moderate discount levels, consistent with the higher unit prices and stronger brand loyalty typical of technology goods. Office Supplies occupies an intermediate position. This pattern is consistent with the hypothesis that deep discounting erodes value at scale, and does not establish causality — margin outcomes also reflect cost structure and order volume. The finding suggests that category-specific discount guardrails, particularly for Furniture, may protect profitability without meaningfully reducing customer acquisition.
+
+\newpage
+
+## Page 6 — Visualisation 3: Annual Sales and Profit Trend
+
+```{r fig3}
+tr <- ss %>% group_by(Year) %>%
+  summarise(Sales=sum(Sales),Profit=sum(Profit),.groups="drop")
+ggplot(tr,aes(Year))+
+  geom_line(aes(y=Sales, colour="Sales"), linewidth=1.2)+
+  geom_point(aes(y=Sales,colour="Sales"),size=2.5)+
+  geom_line(aes(y=Profit,colour="Profit"),linewidth=1.2,linetype="dashed")+
+  geom_point(aes(y=Profit,colour="Profit"),size=2.5)+
+  scale_colour_manual(values=c("Sales"="#27ae60","Profit"="#2980b9"))+
+  scale_y_continuous(labels=dollar_format(scale=1e-3,suffix="K"))+
+  scale_x_continuous(breaks=2011:2014)+
+  labs(title="Fig 3 — Annual Total Sales and Total Profit (2011–2014)",
+       x="Year",y="Amount (USD thousands)",colour=NULL,
+       caption="Source: Superstore dataset. Both series on a common scale.")+
+  th+theme(legend.position="bottom")
+```
+
+**Interpretation.** Total sales grew steadily from 2011 to 2014, reflecting an expanding retail business. Profit followed a broadly similar trajectory but with greater variability, and profit growth lagged behind sales growth in certain years — consistent with increased discount activity or a shift toward lower-margin product mix. The converging gap between the two series in 2014 is an encouraging signal of improving profitability discipline. Overall profit margin across the full period is approximately 12%, indicating meaningful room for improvement, particularly if high-discount behaviours identified in Figure 2 are addressed.
+
+\newpage
+
+## Page 7 — Visualisation 4: Category Sales Share
+
+```{r fig4}
+cs <- ss %>% group_by(Category) %>% summarise(S=sum(Sales),.groups="drop") %>%
+  mutate(Pct=S/sum(S))
+ggplot(cs,aes("",S,fill=Category))+geom_col(width=1,colour="white")+
+  coord_polar(theta="y")+
+  scale_fill_manual(values=c("#2980b9","#27ae60","#e74c3c"))+
+  geom_text(aes(label=percent(Pct,0.1)),position=position_stack(vjust=0.5),
+            colour="white",size=3.5)+
+  labs(title="Fig 4 — Sales Share by Product Category (2011–2014)",fill=NULL,
+       caption="Source: Superstore dataset.")+
+  th+theme(axis.title=element_blank(),axis.text=element_blank(),panel.grid=element_blank())
+```
+
+**Interpretation.** Technology products account for the largest sales share (~36%), followed by Furniture (~32%) and Office Supplies (~31%). This near-equal three-way split reflects a diversified revenue base. However, sales share diverges meaningfully from profitability contribution: as shown in Figure 2, Furniture carries the highest risk of margin erosion under discount conditions, despite representing nearly one-third of revenue. Office Supplies, with the smallest share, tends to benefit from higher transaction frequency and lower per-unit logistics costs. A category management strategy that reduces Furniture discount depth and sustains Technology growth is likely to improve overall profitability without requiring volume sacrifices.
+
+\newpage
+
+## Page 8 — Visualisation 5: Sales Heatmap — Region × Category
+
+```{r fig5}
+hm <- ss %>% group_by(Region,Category) %>% summarise(S=sum(Sales),.groups="drop")
+ggplot(hm,aes(Category,Region,fill=S))+geom_tile(colour="white",linewidth=0.7)+
+  geom_text(aes(label=dollar(round(S/1e3),suffix="K")),
+            colour="white",fontface="bold",size=3)+
+  scale_fill_gradient(low="#d6eaf8",high="#1a5276",
+                      labels=dollar_format(scale=1e-3,suffix="K"))+
+  labs(title="Fig 5 — Sales Heatmap by Region and Category (2011–2014)",
+       x="Category",y="Region",fill="Sales (USD)",
+       caption="Source: Superstore dataset.")+th
+```
+
+**Interpretation.** The West and East regions generate the highest total sales across all three categories, consistent with the economic context provided by the external datasets: California and New York — the two highest-revenue states in Figure 1 — contribute the majority of Western and Eastern regional totals respectively, and both states rank among the highest for median household income (US Census Bureau ACS, 2022). The South's relative strength in Technology is notable and may reflect faster technology adoption in southern metropolitan areas. Central region underperformance across all categories suggests potential for strategic expansion, particularly in Office Supplies where logistics efficiency advantages may reduce the cost of market entry.
+
+\newpage
+
+## Pages 9–10 — Data Story
+
+**The Geography of Retail Performance: Population, Prosperity, and Profitability**
+
+This analysis asked whether state-level socioeconomic conditions are associated with Superstore retail performance. Across five visualisations and three external datasets, a coherent and actionable picture emerges.
+
+**Market size drives volume.** Figure 1 shows that sales are concentrated in California, New York, and Texas — the three most populous US states. The bubble chart in the Economic Context dashboard tab (Population vs Sales) confirms a positive association between state population and total sales volume. This is expected: more residents means a larger potential customer base. However, population alone does not explain margin quality. The scatter plot of income vs sales (Economic Context tab) shows that the relationship between household income and sales performance is more complex — some high-income states generate moderate volumes because they are smaller markets, while some lower-income states generate high volumes purely due to scale.
+
+**Discounting is the primary profitability lever.** Figure 2 presents the most operationally important finding: discount rate and profit margin are negatively associated across all product categories, most sharply in Furniture. This pattern is visible regardless of region or time period. Given that total sales grew consistently (Figure 3), the moderate overall profit margin (~12%) is likely explained, at least in part, by widespread discount behaviour. Addressing discount depth in Furniture — where negative-margin transactions are common above 30% — represents the clearest near-term opportunity to improve returns.
+
+**Regional concentration creates both strength and vulnerability.** Figure 5 reveals that West and East regions dominate sales across all categories. This geographic concentration aligns with the higher household incomes and larger populations in California, New York, and Washington (Economic Context data, BLS and Census). While this concentration supports current performance, it also means the business is disproportionately exposed to economic or competitive changes in a small number of states. The South's relative Technology strength (Figure 5) and the Central region's lower saturation suggest expansion opportunities in underserved markets.
+
+**Limitations.** The temporal mismatch between the 2022–2024 external data and 2011–2014 Superstore transactions means associations must be interpreted cautiously. External indicators serve as structural context, not matched predictors. Causality cannot be inferred from observational patterns. All findings are descriptive.
+
+**Recommendations.** Three evidence-grounded recommendations follow from the analysis:
+
+1. *Furniture discount guardrails* — Figure 2 shows that discounts above 20% are consistently associated with negative profit margins in Furniture. A policy capping approved discounts at 20% in this category is likely to protect margins without substantially reducing conversion.
+
+2. *South Technology expansion* — Figure 5 shows relative South strength in Technology. Coupling this with the BLS unemployment context (several southern states show low 2022 unemployment, signalling economic activity), a targeted Technology investment in southern states is supported by the data.
+
+3. *Data-driven territory planning* — The association between state population and sales volume (Figure 1, Economic Context) supports using state-level socioeconomic profiles as inputs to sales territory sizing and quota allocation, reducing over-reliance on historical patterns alone.
+
+\newpage
+
+## Page 11 — AI Acknowledgement and Citations
+
+**AI Usage Acknowledgement.** Claude (Anthropic) was used to assist with R Shiny layout coding, ggplot2 chart generation, and drafting initial paragraph outlines. All analytical interpretations, dataset selections, and conclusions were reviewed and verified by the author. The author accepts full responsibility for all submitted content. No sources were fabricated. AI-generated code was tested before inclusion.
+
+---
+
+**Full References**
+
+Chang, W., Cheng, J., Allaire, J., Sievert, C., et al. (2023). *shiny: Web Application Framework for R* (R package version 1.7.5).
+
+Sievert, C. (2020). *Interactive Web-Based Data Visualization with R, plotly, and shiny*. Chapman and Hall/CRC.
+
+US Bureau of Labor Statistics. (2023). *Local Area Unemployment Statistics (LAUS): State Annual Average Unemployment Rates, 2022*. US Dept of Labor. Retrieved May 2026, from https://www.bls.gov/lau/
+
+US Census Bureau. (2023). *American Community Survey 1-Year Estimates, Table B19013: Median Household Income, 2022*. Retrieved May 2026, from https://data.census.gov
+
+US Census Bureau, Population Division. (2026). *Annual Estimates of the Resident Population: April 1, 2020 to July 1, 2025* (NST-EST2025-POP). Retrieved May 2026, from https://www.census.gov/data/tables/time-series/demo/popest/2020s-state-total.html
+
+Wickham, H. (2016). *ggplot2: Elegant Graphics for Data Analysis*. Springer-Verlag. https://ggplot2.tidyverse.org
+
+Wickham, H., François, R., Henry, L., Müller, K., & Vaughan, D. (2023). *dplyr: A Grammar of Data Manipulation* (R package version 1.1.3).
