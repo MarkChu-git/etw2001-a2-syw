@@ -174,7 +174,7 @@ ggplot(hm,aes(Category,Region,fill=S))+geom_tile(colour="white",linewidth=0.7)+
 
 \newpage
 
-## Pages 9–10 — Data Story
+## Page 9 — Data Story (Part 1)
 
 **The Geography of Retail Performance: Population, Prosperity, and Profitability**
 
@@ -185,6 +185,8 @@ This analysis asked whether state-level socioeconomic conditions are associated 
 **Discounting is the primary profitability lever.** Figure 2 presents the most operationally important finding: discount rate and profit margin are negatively associated across all product categories, most sharply in Furniture. This pattern is visible regardless of region or time period. Given that total sales grew consistently (Figure 3), the moderate overall profit margin (~12%) is likely explained, at least in part, by widespread discount behaviour. Addressing discount depth in Furniture — where negative-margin transactions are common above 30% — represents the clearest near-term opportunity to improve returns.
 
 **Regional concentration creates both strength and vulnerability.** Figure 5 reveals that West and East regions dominate sales across all categories. This geographic concentration aligns with the higher household incomes and larger populations in California, New York, and Washington (Economic Context data, BLS and Census). While this concentration supports current performance, it also means the business is disproportionately exposed to economic or competitive changes in a small number of states. The South's relative Technology strength (Figure 5) and the Central region's lower saturation suggest expansion opportunities in underserved markets.
+
+## Page 10 — Data Story (Part 2)
 
 **Limitations.** The temporal mismatch between the 2022–2024 external data and 2011–2014 Superstore transactions means associations must be interpreted cautiously. External indicators serve as structural context, not matched predictors. Causality cannot be inferred from observational patterns. All findings are descriptive.
 
