@@ -13,11 +13,27 @@ superstore <- read.csv("data/superstore_us_clean.csv", stringsAsFactors = FALSE)
 superstore$Order.Date <- as.Date(superstore$Order.Date)
 superstore$Year <- as.integer(format(superstore$Order.Date, "%Y"))
 
-population <- read.csv("data/population_by_state.csv", stringsAsFactors = FALSE)
-income     <- read.csv("data/income_by_state.csv",     stringsAsFactors = FALSE)
+# Three external datasets, period-matched to 2011-2014 and keyed on State + Year.
+# Built reproducibly by scripts/prepare_external_data.R (US Census PEP, US Census
+# SAIPE, US BLS LAUS). See data/dataset_provenance.csv for sources and citations.
+population <- read.csv("data/population_by_state.csv",   stringsAsFactors = FALSE)
+income     <- read.csv("data/income_by_state.csv",       stringsAsFactors = FALSE)
 unemploy   <- read.csv("data/unemployment_by_state.csv", stringsAsFactors = FALSE)
 
-# State-level economic context (join on State)
+# Collapse the State+Year series to one 2011-2014 average per state, so each state
+# contributes a single point to the cross-sectional economic-context charts.
+econ_profile <- population %>%
+  left_join(income,   by = c("State", "Year")) %>%
+  left_join(unemploy, by = c("State", "Year")) %>%
+  group_by(State) %>%
+  summarise(
+    Population              = mean(Population, na.rm = TRUE),
+    Median_Household_Income = mean(Median_Household_Income, na.rm = TRUE),
+    Unemployment_Rate       = mean(Unemployment_Rate, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# State-level retail aggregates joined to the economic profile (join on State)
 state_econ <- superstore %>%
   group_by(State) %>%
   summarise(
@@ -27,9 +43,7 @@ state_econ <- superstore %>%
     Profit_Margin = sum(Profit) / sum(Sales),
     .groups = "drop"
   ) %>%
-  left_join(population, by = "State") %>%
-  left_join(income[, c("State","Median_Household_Income")], by = "State") %>%
-  left_join(unemploy[, c("State","Unemployment_Rate")], by = "State")
+  left_join(econ_profile, by = "State")
 
 # ── UI ──────────────────────────────────────────────────────────────────────────
 ui <- dashboardPage(
@@ -116,9 +130,10 @@ ui <- dashboardPage(
 
         div(class = "research-question",
           strong("External Data Context: "),
-          "State-level profiles from US Census Bureau (population & income, ACS 2022)
-           and Bureau of Labor Statistics (unemployment, 2022) are used as contextual
-           indicators alongside Superstore retail performance (2011–2014)."
+          "State economic profiles — population (US Census Bureau PEP), median household
+           income (US Census Bureau SAIPE), and unemployment rate (US BLS LAUS) — each
+           averaged over 2011–2014 to match the Superstore transactions, shown here
+           alongside state retail performance."
         ),
 
         fluidRow(
@@ -279,7 +294,7 @@ server <- function(input, output) {
       scale_x_continuous(labels = dollar_format()) +
       scale_y_continuous(labels = dollar_format(scale = 1e-3, suffix = "K")) +
       scale_color_gradient(low = "#aed6f1", high = "#1a5276") +
-      labs(x = "Median Household Income (USD, 2022)", y = "Total Retail Sales (USD)", color = "Sales") +
+      labs(x = "Median Household Income (USD, 2011–2014 avg)", y = "Total Retail Sales (USD)", color = "Sales") +
       theme_minimal(base_size = 11) + theme(legend.position = "none")
     ggplotly(p, tooltip = "text")
   })
@@ -288,23 +303,23 @@ server <- function(input, output) {
     d <- state_econ
     if (nrow(d) == 0 || all(is.na(d$Unemployment_Rate))) return(no_data_plot())
     p <- ggplot(d, aes(x = Unemployment_Rate, y = Profit_Margin,
-                       text = paste0(State, "<br>Unemployment: ", Unemployment_Rate, "%",
+                       text = paste0(State, "<br>Unemployment: ", round(Unemployment_Rate, 1), "%",
                                      "<br>Profit Margin: ", percent(Profit_Margin, 0.1)))) +
       geom_point(aes(color = Profit_Margin), size = 3, alpha = 0.85) +
       geom_smooth(method = "lm", se = TRUE, color = "#e67e22", linewidth = 1) +
       scale_x_continuous(labels = function(x) paste0(x, "%")) +
       scale_y_continuous(labels = percent_format()) +
       scale_color_gradient2(low = "#e74c3c", mid = "#f9e79f", high = "#27ae60", midpoint = 0.1) +
-      labs(x = "Unemployment Rate (%, 2022)", y = "Profit Margin", color = NULL) +
+      labs(x = "Unemployment Rate (%, 2011–2014 avg)", y = "Profit Margin", color = NULL) +
       theme_minimal(base_size = 11) + theme(legend.position = "none")
     ggplotly(p, tooltip = "text")
   })
 
   output$popSalesPlot <- renderPlotly({
     d <- state_econ
-    if (nrow(d) == 0 || all(is.na(d$Population_2024))) return(no_data_plot())
-    p <- ggplot(d, aes(x = Population_2024 / 1e6, y = Total_Sales,
-                       text = paste0(State, "<br>Population: ", round(Population_2024 / 1e6, 1), "M",
+    if (nrow(d) == 0 || all(is.na(d$Population))) return(no_data_plot())
+    p <- ggplot(d, aes(x = Population / 1e6, y = Total_Sales,
+                       text = paste0(State, "<br>Population: ", round(Population / 1e6, 1), "M",
                                      "<br>Sales: ", dollar(round(Total_Sales))))) +
       geom_point(aes(color = Profit_Margin, size = Total_Sales), alpha = 0.8) +
       geom_smooth(method = "lm", se = FALSE, color = "#8e44ad", linewidth = 1) +
@@ -312,7 +327,7 @@ server <- function(input, output) {
       scale_y_continuous(labels = dollar_format(scale = 1e-3, suffix = "K")) +
       scale_color_gradient(low = "#e74c3c", high = "#27ae60") +
       scale_size(range = c(2, 10), guide = "none") +
-      labs(x = "State Population (millions, 2024)", y = "Total Retail Sales (USD)", color = "Profit Margin") +
+      labs(x = "State Population (millions, 2011–2014 avg)", y = "Total Retail Sales (USD)", color = "Profit Margin") +
       theme_minimal(base_size = 11)
     ggplotly(p, tooltip = "text")
   })
