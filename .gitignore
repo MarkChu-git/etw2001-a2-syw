@@ -1,0 +1,24 @@
+# --- R session artifacts ---
+.Rhistory
+.Rapp.history
+.RData
+.RDataTmp
+.Ruserdata
+
+# --- RStudio ---
+.Rproj.user/
+*.Rproj
+
+# --- Quarto / R Markdown render output ---
+/.quarto/
+*_cache/
+*_files/
+
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# --- Logs ---
+*.log
