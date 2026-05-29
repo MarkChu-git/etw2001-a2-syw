@@ -1,52 +1,197 @@
-State,Unemployment_Rate,Year,Source
-Alabama,2.9,2022,US Bureau of Labor Statistics LAUS Program
-Alaska,4.4,2022,US Bureau of Labor Statistics LAUS Program
-Arizona,3.8,2022,US Bureau of Labor Statistics LAUS Program
-Arkansas,3.4,2022,US Bureau of Labor Statistics LAUS Program
-California,4.2,2022,US Bureau of Labor Statistics LAUS Program
-Colorado,3.3,2022,US Bureau of Labor Statistics LAUS Program
-Connecticut,4.4,2022,US Bureau of Labor Statistics LAUS Program
-Delaware,4.2,2022,US Bureau of Labor Statistics LAUS Program
-Florida,2.9,2022,US Bureau of Labor Statistics LAUS Program
-Georgia,3.1,2022,US Bureau of Labor Statistics LAUS Program
-Hawaii,3.7,2022,US Bureau of Labor Statistics LAUS Program
-Idaho,2.9,2022,US Bureau of Labor Statistics LAUS Program
-Illinois,5.0,2022,US Bureau of Labor Statistics LAUS Program
-Indiana,3.0,2022,US Bureau of Labor Statistics LAUS Program
-Iowa,2.4,2022,US Bureau of Labor Statistics LAUS Program
-Kansas,2.4,2022,US Bureau of Labor Statistics LAUS Program
-Kentucky,4.0,2022,US Bureau of Labor Statistics LAUS Program
-Louisiana,3.7,2022,US Bureau of Labor Statistics LAUS Program
-Maine,3.1,2022,US Bureau of Labor Statistics LAUS Program
-Maryland,3.2,2022,US Bureau of Labor Statistics LAUS Program
-Massachusetts,3.6,2022,US Bureau of Labor Statistics LAUS Program
-Michigan,4.4,2022,US Bureau of Labor Statistics LAUS Program
-Minnesota,2.8,2022,US Bureau of Labor Statistics LAUS Program
-Mississippi,4.2,2022,US Bureau of Labor Statistics LAUS Program
-Missouri,2.7,2022,US Bureau of Labor Statistics LAUS Program
-Montana,2.5,2022,US Bureau of Labor Statistics LAUS Program
-Nebraska,1.8,2022,US Bureau of Labor Statistics LAUS Program
-Nevada,4.9,2022,US Bureau of Labor Statistics LAUS Program
-New Hampshire,2.2,2022,US Bureau of Labor Statistics LAUS Program
-New Jersey,3.8,2022,US Bureau of Labor Statistics LAUS Program
-New Mexico,4.3,2022,US Bureau of Labor Statistics LAUS Program
-New York,4.1,2022,US Bureau of Labor Statistics LAUS Program
-North Carolina,4.0,2022,US Bureau of Labor Statistics LAUS Program
-North Dakota,2.2,2022,US Bureau of Labor Statistics LAUS Program
-Ohio,4.1,2022,US Bureau of Labor Statistics LAUS Program
-Oklahoma,2.8,2022,US Bureau of Labor Statistics LAUS Program
-Oregon,3.8,2022,US Bureau of Labor Statistics LAUS Program
-Pennsylvania,4.2,2022,US Bureau of Labor Statistics LAUS Program
-Rhode Island,3.9,2022,US Bureau of Labor Statistics LAUS Program
-South Carolina,3.4,2022,US Bureau of Labor Statistics LAUS Program
-South Dakota,2.0,2022,US Bureau of Labor Statistics LAUS Program
-Tennessee,3.0,2022,US Bureau of Labor Statistics LAUS Program
-Texas,4.0,2022,US Bureau of Labor Statistics LAUS Program
-Utah,2.2,2022,US Bureau of Labor Statistics LAUS Program
-Vermont,2.5,2022,US Bureau of Labor Statistics LAUS Program
-Virginia,3.0,2022,US Bureau of Labor Statistics LAUS Program
-Washington,4.2,2022,US Bureau of Labor Statistics LAUS Program
-West Virginia,4.1,2022,US Bureau of Labor Statistics LAUS Program
-Wisconsin,2.9,2022,US Bureau of Labor Statistics LAUS Program
-Wyoming,3.1,2022,US Bureau of Labor Statistics LAUS Program
-District of Columbia,5.6,2022,US Bureau of Labor Statistics LAUS Program
+"State","Year","Unemployment_Rate"
+"Alabama",2011,9.6
+"Alabama",2012,8.2
+"Alabama",2013,7.4
+"Alabama",2014,6.8
+"Arizona",2011,9.5
+"Arizona",2012,8.4
+"Arizona",2013,7.8
+"Arizona",2014,6.8
+"Arkansas",2011,7.9
+"Arkansas",2012,7.3
+"Arkansas",2013,7
+"Arkansas",2014,5.9
+"California",2011,11.7
+"California",2012,10.4
+"California",2013,9
+"California",2014,7.6
+"Colorado",2011,8.7
+"Colorado",2012,8
+"Colorado",2013,6.7
+"Colorado",2014,5
+"Connecticut",2011,9
+"Connecticut",2012,8.4
+"Connecticut",2013,8
+"Connecticut",2014,6.6
+"Delaware",2011,7.4
+"Delaware",2012,7
+"Delaware",2013,6.5
+"Delaware",2014,5.6
+"District of Columbia",2011,10.1
+"District of Columbia",2012,9
+"District of Columbia",2013,8.4
+"District of Columbia",2014,7.7
+"Florida",2011,10.2
+"Florida",2012,8.7
+"Florida",2013,7.5
+"Florida",2014,6.4
+"Georgia",2011,10
+"Georgia",2012,9
+"Georgia",2013,8.1
+"Georgia",2014,7.2
+"Idaho",2011,8.4
+"Idaho",2012,7.5
+"Idaho",2013,6.9
+"Idaho",2014,4.4
+"Illinois",2011,9.8
+"Illinois",2012,9
+"Illinois",2013,9.1
+"Illinois",2014,7.2
+"Indiana",2011,8.9
+"Indiana",2012,8.2
+"Indiana",2013,7.5
+"Indiana",2014,6
+"Iowa",2011,5.6
+"Iowa",2012,5
+"Iowa",2013,4.7
+"Iowa",2014,4.3
+"Kansas",2011,6.3
+"Kansas",2012,5.7
+"Kansas",2013,5.3
+"Kansas",2014,4.5
+"Kentucky",2011,9.4
+"Kentucky",2012,8.2
+"Kentucky",2013,7.9
+"Kentucky",2014,6.4
+"Louisiana",2011,7.3
+"Louisiana",2012,6.7
+"Louisiana",2013,6.4
+"Louisiana",2014,6.2
+"Maine",2011,7.8
+"Maine",2012,7.2
+"Maine",2013,6.7
+"Maine",2014,5.6
+"Maryland",2011,7.3
+"Maryland",2012,6.9
+"Maryland",2013,6.6
+"Maryland",2014,5.7
+"Massachusetts",2011,7.2
+"Massachusetts",2012,6.7
+"Massachusetts",2013,6.7
+"Massachusetts",2014,5.8
+"Michigan",2011,10.1
+"Michigan",2012,9.1
+"Michigan",2013,8.7
+"Michigan",2014,7.2
+"Minnesota",2011,6.6
+"Minnesota",2012,5.7
+"Minnesota",2013,5
+"Minnesota",2014,4.2
+"Mississippi",2011,9.8
+"Mississippi",2012,8.8
+"Mississippi",2013,8.5
+"Mississippi",2014,7.6
+"Missouri",2011,8.6
+"Missouri",2012,7.1
+"Missouri",2013,6.8
+"Missouri",2014,6.2
+"Montana",2011,6.6
+"Montana",2012,5.8
+"Montana",2013,5.3
+"Montana",2014,4.6
+"Nebraska",2011,4.4
+"Nebraska",2012,3.9
+"Nebraska",2013,3.7
+"Nebraska",2014,3.2
+"Nevada",2011,13
+"Nevada",2012,11.5
+"Nevada",2013,10
+"Nevada",2014,8.2
+"New Hampshire",2011,5.5
+"New Hampshire",2012,5.5
+"New Hampshire",2013,5.2
+"New Hampshire",2014,4.3
+"New Jersey",2011,9.4
+"New Jersey",2012,9.4
+"New Jersey",2013,8.4
+"New Jersey",2014,6.7
+"New Mexico",2011,7.2
+"New Mexico",2012,7
+"New Mexico",2013,6.9
+"New Mexico",2014,6.6
+"New York",2011,8.4
+"New York",2012,8.7
+"New York",2013,7.8
+"New York",2014,6.3
+"North Carolina",2011,10.3
+"North Carolina",2012,9.6
+"North Carolina",2013,7.8
+"North Carolina",2014,6.1
+"North Dakota",2011,3.3
+"North Dakota",2012,2.9
+"North Dakota",2013,2.9
+"North Dakota",2014,2.7
+"Ohio",2011,8.8
+"Ohio",2012,7.4
+"Ohio",2013,7.4
+"Ohio",2014,5.8
+"Oklahoma",2011,5.6
+"Oklahoma",2012,5.1
+"Oklahoma",2013,5.1
+"Oklahoma",2014,4.3
+"Oregon",2011,9.5
+"Oregon",2012,8.7
+"Oregon",2013,7.8
+"Oregon",2014,6.6
+"Pennsylvania",2011,7.7
+"Pennsylvania",2012,7.6
+"Pennsylvania",2013,7
+"Pennsylvania",2014,6
+"Rhode Island",2011,11.1
+"Rhode Island",2012,10.3
+"Rhode Island",2013,9.5
+"Rhode Island",2014,7.8
+"South Carolina",2011,10.4
+"South Carolina",2012,9
+"South Carolina",2013,7.4
+"South Carolina",2014,6.3
+"South Dakota",2011,4.6
+"South Dakota",2012,4
+"South Dakota",2013,3.7
+"South Dakota",2014,3.3
+"Tennessee",2011,9
+"Tennessee",2012,7.9
+"Tennessee",2013,7.6
+"Tennessee",2014,6.6
+"Texas",2011,8
+"Texas",2012,6.7
+"Texas",2013,6.3
+"Texas",2014,5.2
+"Utah",2011,7.2
+"Utah",2012,4.8
+"Utah",2013,4.2
+"Utah",2014,3.6
+"Vermont",2011,5.4
+"Vermont",2012,4.8
+"Vermont",2013,4.4
+"Vermont",2014,3.9
+"Virginia",2011,6.3
+"Virginia",2012,5.8
+"Virginia",2013,5.5
+"Virginia",2014,5.1
+"Washington",2011,9.4
+"Washington",2012,8.4
+"Washington",2013,6.6
+"Washington",2014,5.9
+"West Virginia",2011,7.7
+"West Virginia",2012,7.2
+"West Virginia",2013,6.7
+"West Virginia",2014,6.5
+"Wisconsin",2011,7.6
+"Wisconsin",2012,6.9
+"Wisconsin",2013,6.7
+"Wisconsin",2014,5.4
+"Wyoming",2011,6.1
+"Wyoming",2012,5.4
+"Wyoming",2013,4.7
+"Wyoming",2014,4.4

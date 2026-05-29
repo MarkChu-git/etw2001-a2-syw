@@ -1,53 +1,197 @@
-"State","Population_2024"
-"Alabama",5193088
-"Alaska",737270
-"Arizona",7623818
-"Arkansas",3114791
-"California",39355309
-"Colorado",6012561
-"Connecticut",3688496
-"Delaware",1059952
-"District of Columbia",693645
-"Florida",23462518
-"Georgia",11302748
-"Hawaii",1432820
-"Idaho",2029733
-"Illinois",12719141
-"Indiana",6973333
-"Iowa",3238387
-"Kansas",2977220
-"Kentucky",4606864
-"Louisiana",4618189
-"Maine",1414874
-"Maryland",6265347
-"Massachusetts",7154084
-"Michigan",10127884
-"Minnesota",5830405
-"Mississippi",2954160
-"Missouri",6270541
-"Montana",1144694
-"Nebraska",2018006
-"Nevada",3282188
-"New Hampshire",1415342
-"New Jersey",9548215
-"New Mexico",2125498
-"New York",20002427
-"North Carolina",11197968
-"North Dakota",799358
-"Ohio",11900510
-"Oklahoma",4123288
-"Oregon",4273586
-"Pennsylvania",13059432
-"Rhode Island",1114521
-"South Carolina",5570274
-"South Dakota",935094
-"Tennessee",7315076
-"Texas",31709821
-"Utah",3538904
-"Vermont",644663
-"Virginia",8880107
-"Washington",8001020
-"West Virginia",1766147
-"Wisconsin",5972787
-"Wyoming",588753
-"Puerto Rico",3184835
+"State","Year","Population"
+"Alabama",2011,4799069
+"Alabama",2012,4815588
+"Alabama",2013,4830081
+"Alabama",2014,4841799
+"Arizona",2011,6472643
+"Arizona",2012,6554978
+"Arizona",2013,6632764
+"Arizona",2014,6730413
+"Arkansas",2011,2940667
+"Arkansas",2012,2952164
+"Arkansas",2013,2959400
+"Arkansas",2014,2967392
+"California",2011,37638369
+"California",2012,37948800
+"California",2013,38260787
+"California",2014,38596972
+"Colorado",2011,5121108
+"Colorado",2012,5192647
+"Colorado",2013,5269035
+"Colorado",2014,5350101
+"Connecticut",2011,3588283
+"Connecticut",2012,3594547
+"Connecticut",2013,3594841
+"Connecticut",2014,3594524
+"Delaware",2011,907381
+"Delaware",2012,915179
+"Delaware",2013,923576
+"Delaware",2014,932487
+"District of Columbia",2011,619800
+"District of Columbia",2012,634924
+"District of Columbia",2013,650581
+"District of Columbia",2014,662328
+"Florida",2011,19053237
+"Florida",2012,19297822
+"Florida",2013,19545621
+"Florida",2014,19845911
+"Georgia",2011,9802431
+"Georgia",2012,9901430
+"Georgia",2013,9972479
+"Georgia",2014,10067278
+"Idaho",2011,1583910
+"Idaho",2012,1595324
+"Idaho",2013,1611206
+"Idaho",2014,1631112
+"Illinois",2011,12867454
+"Illinois",2012,12882510
+"Illinois",2013,12895129
+"Illinois",2014,12884493
+"Indiana",2011,6516528
+"Indiana",2012,6537703
+"Indiana",2013,6568713
+"Indiana",2014,6593644
+"Iowa",2011,3066336
+"Iowa",2012,3076190
+"Iowa",2013,3092997
+"Iowa",2014,3109350
+"Kansas",2011,2869225
+"Kansas",2012,2885257
+"Kansas",2013,2893212
+"Kansas",2014,2900475
+"Kentucky",2011,4369821
+"Kentucky",2012,4386346
+"Kentucky",2013,4404659
+"Kentucky",2014,4414349
+"Louisiana",2011,4575625
+"Louisiana",2012,4600972
+"Louisiana",2013,4624527
+"Louisiana",2014,4644013
+"Maine",2011,1328284
+"Maine",2012,1327729
+"Maine",2013,1328009
+"Maine",2014,1330513
+"Maryland",2011,5839419
+"Maryland",2012,5886992
+"Maryland",2013,5923188
+"Maryland",2014,5957283
+"Massachusetts",2011,6613583
+"Massachusetts",2012,6663005
+"Massachusetts",2013,6713315
+"Massachusetts",2014,6762596
+"Michigan",2011,9882412
+"Michigan",2012,9897145
+"Michigan",2013,9913065
+"Michigan",2014,9929848
+"Minnesota",2011,5346143
+"Minnesota",2012,5376643
+"Minnesota",2013,5413479
+"Minnesota",2014,5451079
+"Mississippi",2011,2978731
+"Mississippi",2012,2983816
+"Mississippi",2013,2988711
+"Mississippi",2014,2990468
+"Missouri",2011,6010275
+"Missouri",2012,6024367
+"Missouri",2013,6040715
+"Missouri",2014,6056202
+"Montana",2011,997316
+"Montana",2012,1003783
+"Montana",2013,1013569
+"Montana",2014,1021869
+"Nebraska",2011,1840672
+"Nebraska",2012,1853303
+"Nebraska",2013,1865279
+"Nebraska",2014,1879321
+"Nevada",2011,2712730
+"Nevada",2012,2743996
+"Nevada",2013,2775970
+"Nevada",2014,2817628
+"New Hampshire",2011,1320202
+"New Hampshire",2012,1324232
+"New Hampshire",2013,1326622
+"New Hampshire",2014,1333341
+"New Jersey",2011,8828117
+"New Jersey",2012,8844942
+"New Jersey",2013,8856972
+"New Jersey",2014,8864525
+"New Mexico",2011,2080450
+"New Mexico",2012,2087309
+"New Mexico",2013,2092273
+"New Mexico",2014,2089568
+"New York",2011,19499241
+"New York",2012,19572932
+"New York",2013,19624447
+"New York",2014,19651049
+"North Carolina",2011,9657592
+"North Carolina",2012,9749476
+"North Carolina",2013,9843336
+"North Carolina",2014,9932887
+"North Dakota",2011,685225
+"North Dakota",2012,701176
+"North Dakota",2013,722036
+"North Dakota",2014,737401
+"Ohio",2011,11544663
+"Ohio",2012,11548923
+"Ohio",2013,11576684
+"Ohio",2014,11602700
+"Oklahoma",2011,3788379
+"Oklahoma",2012,3818814
+"Oklahoma",2013,3853214
+"Oklahoma",2014,3878187
+"Oregon",2011,3872036
+"Oregon",2012,3899001
+"Oregon",2013,3922468
+"Oregon",2014,3963244
+"Pennsylvania",2011,12745815
+"Pennsylvania",2012,12767118
+"Pennsylvania",2013,12776309
+"Pennsylvania",2014,12788313
+"Rhode Island",2011,1053649
+"Rhode Island",2012,1054621
+"Rhode Island",2013,1055081
+"Rhode Island",2014,1055936
+"South Carolina",2011,4671994
+"South Carolina",2012,4717354
+"South Carolina",2013,4764080
+"South Carolina",2014,4823617
+"South Dakota",2011,823579
+"South Dakota",2012,833566
+"South Dakota",2013,842316
+"South Dakota",2014,849129
+"Tennessee",2011,6399291
+"Tennessee",2012,6453898
+"Tennessee",2013,6494340
+"Tennessee",2014,6541223
+"Texas",2011,25645629
+"Texas",2012,26084481
+"Texas",2013,26480266
+"Texas",2014,26964333
+"Utah",2011,2814384
+"Utah",2012,2853375
+"Utah",2013,2897640
+"Utah",2014,2936879
+"Vermont",2011,627049
+"Vermont",2012,626090
+"Vermont",2013,626210
+"Vermont",2014,625214
+"Virginia",2011,8101155
+"Virginia",2012,8185080
+"Virginia",2013,8252427
+"Virginia",2014,8310993
+"Washington",2011,6826627
+"Washington",2012,6897058
+"Washington",2013,6963985
+"Washington",2014,7054655
+"West Virginia",2011,1856301
+"West Virginia",2012,1856872
+"West Virginia",2013,1853914
+"West Virginia",2014,1849489
+"Wisconsin",2011,5705288
+"Wisconsin",2012,5719960
+"Wisconsin",2013,5736754
+"Wisconsin",2014,5751525
+"Wyoming",2011,567299
+"Wyoming",2012,576305
+"Wyoming",2013,582122
+"Wyoming",2014,582531

@@ -1,52 +1,197 @@
-State,Median_Household_Income,Year,Source
-Alabama,54943,2022,US Census Bureau ACS 1-Year Estimates
-Alaska,82376,2022,US Census Bureau ACS 1-Year Estimates
-Arizona,72581,2022,US Census Bureau ACS 1-Year Estimates
-Arkansas,52123,2022,US Census Bureau ACS 1-Year Estimates
-California,84097,2022,US Census Bureau ACS 1-Year Estimates
-Colorado,87598,2022,US Census Bureau ACS 1-Year Estimates
-Connecticut,84561,2022,US Census Bureau ACS 1-Year Estimates
-Delaware,76362,2022,US Census Bureau ACS 1-Year Estimates
-Florida,63062,2022,US Census Bureau ACS 1-Year Estimates
-Georgia,65030,2022,US Census Bureau ACS 1-Year Estimates
-Hawaii,88006,2022,US Census Bureau ACS 1-Year Estimates
-Idaho,64229,2022,US Census Bureau ACS 1-Year Estimates
-Illinois,72205,2022,US Census Bureau ACS 1-Year Estimates
-Indiana,61944,2022,US Census Bureau ACS 1-Year Estimates
-Iowa,66054,2022,US Census Bureau ACS 1-Year Estimates
-Kansas,66332,2022,US Census Bureau ACS 1-Year Estimates
-Kentucky,55454,2022,US Census Bureau ACS 1-Year Estimates
-Louisiana,57852,2022,US Census Bureau ACS 1-Year Estimates
-Maine,67897,2022,US Census Bureau ACS 1-Year Estimates
-Maryland,94384,2022,US Census Bureau ACS 1-Year Estimates
-Massachusetts,89645,2022,US Census Bureau ACS 1-Year Estimates
-Michigan,63202,2022,US Census Bureau ACS 1-Year Estimates
-Minnesota,80441,2022,US Census Bureau ACS 1-Year Estimates
-Mississippi,48953,2022,US Census Bureau ACS 1-Year Estimates
-Missouri,61895,2022,US Census Bureau ACS 1-Year Estimates
-Montana,62992,2022,US Census Bureau ACS 1-Year Estimates
-Nebraska,68925,2022,US Census Bureau ACS 1-Year Estimates
-Nevada,66274,2022,US Census Bureau ACS 1-Year Estimates
-New Hampshire,88235,2022,US Census Bureau ACS 1-Year Estimates
-New Jersey,92827,2022,US Census Bureau ACS 1-Year Estimates
-New Mexico,53568,2022,US Census Bureau ACS 1-Year Estimates
-New York,74314,2022,US Census Bureau ACS 1-Year Estimates
-North Carolina,61972,2022,US Census Bureau ACS 1-Year Estimates
-North Dakota,73959,2022,US Census Bureau ACS 1-Year Estimates
-Ohio,62262,2022,US Census Bureau ACS 1-Year Estimates
-Oklahoma,55826,2022,US Census Bureau ACS 1-Year Estimates
-Oregon,78672,2022,US Census Bureau ACS 1-Year Estimates
-Pennsylvania,67587,2022,US Census Bureau ACS 1-Year Estimates
-Rhode Island,74008,2022,US Census Bureau ACS 1-Year Estimates
-South Carolina,60190,2022,US Census Bureau ACS 1-Year Estimates
-South Dakota,65814,2022,US Census Bureau ACS 1-Year Estimates
-Tennessee,58516,2022,US Census Bureau ACS 1-Year Estimates
-Texas,66963,2022,US Census Bureau ACS 1-Year Estimates
-Utah,82736,2022,US Census Bureau ACS 1-Year Estimates
-Vermont,74014,2022,US Census Bureau ACS 1-Year Estimates
-Virginia,82214,2022,US Census Bureau ACS 1-Year Estimates
-Washington,90325,2022,US Census Bureau ACS 1-Year Estimates
-West Virginia,51248,2022,US Census Bureau ACS 1-Year Estimates
-Wisconsin,67080,2022,US Census Bureau ACS 1-Year Estimates
-Wyoming,69067,2022,US Census Bureau ACS 1-Year Estimates
-District of Columbia,101027,2022,US Census Bureau ACS 1-Year Estimates
+"State","Year","Median_Household_Income"
+"Alabama",2011,41427
+"Alabama",2012,41610
+"Alabama",2013,42882
+"Alabama",2014,42917
+"Arizona",2011,46710
+"Arizona",2012,47796
+"Arizona",2013,48504
+"Arizona",2014,50036
+"Arkansas",2011,38889
+"Arkansas",2012,40151
+"Arkansas",2013,40605
+"Arkansas",2014,41335
+"California",2011,57275
+"California",2012,58322
+"California",2013,60185
+"California",2014,61927
+"Colorado",2011,55530
+"Colorado",2012,56880
+"Colorado",2013,58942
+"Colorado",2014,61324
+"Connecticut",2011,65822
+"Connecticut",2012,67275
+"Connecticut",2013,67262
+"Connecticut",2014,70007
+"Delaware",2011,58159
+"Delaware",2012,58326
+"Delaware",2013,58244
+"Delaware",2014,59853
+"District of Columbia",2011,62087
+"District of Columbia",2012,65231
+"District of Columbia",2013,66326
+"District of Columbia",2014,69992
+"Florida",2011,44250
+"Florida",2012,45006
+"Florida",2013,46021
+"Florida",2014,47439
+"Georgia",2011,45886
+"Georgia",2012,47125
+"Georgia",2013,47765
+"Georgia",2014,49240
+"Idaho",2011,43345
+"Idaho",2012,45296
+"Idaho",2013,46621
+"Idaho",2014,47572
+"Illinois",2011,53271
+"Illinois",2012,55126
+"Illinois",2013,56212
+"Illinois",2014,57458
+"Indiana",2011,46410
+"Indiana",2012,46954
+"Indiana",2013,47508
+"Indiana",2014,49384
+"Iowa",2011,49545
+"Iowa",2012,50997
+"Iowa",2013,52286
+"Iowa",2014,53816
+"Kansas",2011,48844
+"Kansas",2012,50140
+"Kansas",2013,50892
+"Kansas",2014,52392
+"Kentucky",2011,41141
+"Kentucky",2012,41717
+"Kentucky",2013,43307
+"Kentucky",2014,42914
+"Louisiana",2011,41804
+"Louisiana",2012,42998
+"Louisiana",2013,44234
+"Louisiana",2014,44680
+"Maine",2011,46160
+"Maine",2012,46856
+"Maine",2013,47095
+"Maine",2014,49381
+"Maryland",2011,70075
+"Maryland",2012,71169
+"Maryland",2013,72482
+"Maryland",2014,73851
+"Massachusetts",2011,63126
+"Massachusetts",2012,65378
+"Massachusetts",2013,66794
+"Massachusetts",2014,69200
+"Michigan",2011,45931
+"Michigan",2012,46793
+"Michigan",2013,48200
+"Michigan",2014,49755
+"Minnesota",2011,56944
+"Minnesota",2012,58828
+"Minnesota",2013,60664
+"Minnesota",2014,61473
+"Mississippi",2011,36963
+"Mississippi",2012,37179
+"Mississippi",2013,38191
+"Mississippi",2014,39738
+"Missouri",2011,45231
+"Missouri",2012,45320
+"Missouri",2013,46905
+"Missouri",2014,48288
+"Montana",2011,44011
+"Montana",2012,45030
+"Montana",2013,46893
+"Montana",2014,46608
+"Nebraska",2011,50281
+"Nebraska",2012,50766
+"Nebraska",2013,51502
+"Nebraska",2014,52803
+"Nevada",2011,49099
+"Nevada",2012,49909
+"Nevada",2013,51250
+"Nevada",2014,51487
+"New Hampshire",2011,62436
+"New Hampshire",2012,63157
+"New Hampshire",2013,64064
+"New Hampshire",2014,66469
+"New Jersey",2011,67574
+"New Jersey",2012,69705
+"New Jersey",2013,70224
+"New Jersey",2014,71968
+"New Mexico",2011,42097
+"New Mexico",2012,42828
+"New Mexico",2013,44026
+"New Mexico",2014,44905
+"New York",2011,55147
+"New York",2012,56357
+"New York",2013,57255
+"New York",2014,58771
+"North Carolina",2011,44028
+"North Carolina",2012,45195
+"North Carolina",2013,45946
+"North Carolina",2014,46596
+"North Dakota",2011,52135
+"North Dakota",2012,54579
+"North Dakota",2013,56800
+"North Dakota",2014,60227
+"Ohio",2011,45803
+"Ohio",2012,46873
+"Ohio",2013,48138
+"Ohio",2014,49349
+"Oklahoma",2011,43232
+"Oklahoma",2012,44336
+"Oklahoma",2013,45724
+"Oklahoma",2014,47524
+"Oregon",2011,46876
+"Oregon",2012,49090
+"Oregon",2013,50228
+"Oregon",2014,51088
+"Pennsylvania",2011,50221
+"Pennsylvania",2012,51225
+"Pennsylvania",2013,52005
+"Pennsylvania",2014,53224
+"Rhode Island",2011,53152
+"Rhode Island",2012,54002
+"Rhode Island",2013,55015
+"Rhode Island",2014,54797
+"South Carolina",2011,42477
+"South Carolina",2012,43290
+"South Carolina",2013,44310
+"South Carolina",2014,45337
+"South Dakota",2011,48188
+"South Dakota",2012,48439
+"South Dakota",2013,49200
+"South Dakota",2014,51059
+"Tennessee",2011,41691
+"Tennessee",2012,42743
+"Tennessee",2013,44268
+"Tennessee",2014,44357
+"Texas",2011,49390
+"Texas",2012,50747
+"Texas",2013,51714
+"Texas",2014,53067
+"Utah",2011,55802
+"Utah",2012,57067
+"Utah",2013,59715
+"Utah",2014,60943
+"Vermont",2011,52033
+"Vermont",2012,52700
+"Vermont",2013,52511
+"Vermont",2014,54153
+"Virginia",2011,61877
+"Virginia",2012,61782
+"Virginia",2013,62745
+"Virginia",2014,64923
+"Washington",2011,56811
+"Washington",2012,57574
+"Washington",2013,58431
+"Washington",2014,61358
+"West Virginia",2011,38587
+"West Virginia",2012,40188
+"West Virginia",2013,41195
+"West Virginia",2014,41030
+"Wisconsin",2011,50401
+"Wisconsin",2012,51063
+"Wisconsin",2013,51474
+"Wisconsin",2014,52632
+"Wyoming",2011,56044
+"Wyoming",2012,55104
+"Wyoming",2013,58424
+"Wyoming",2014,58291
