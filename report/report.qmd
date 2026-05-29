@@ -21,7 +21,7 @@ execute:
 
 ```{r setup}
 library(ggplot2); library(dplyr); library(scales); library(knitr)
-ss   <- read.csv("../clean_dashboard_data.csv", stringsAsFactors=FALSE)
+ss   <- read.csv("../data/superstore_us_clean.csv", stringsAsFactors=FALSE)
 ss$Order.Date <- as.Date(ss$Order.Date)
 ss$Year       <- as.integer(format(ss$Order.Date, "%Y"))
 pop  <- read.csv("../data/population_by_state.csv", stringsAsFactors=FALSE)

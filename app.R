@@ -7,7 +7,9 @@ library(DT)
 library(scales)
 
 # ── Load datasets ──────────────────────────────────────────────────────────────
-superstore <- read.csv("clean_dashboard_data.csv", stringsAsFactors = FALSE)
+# Cleaned by scripts/prepare_superstore.R from the raw data/superstore.xlsx
+# (US market subset, 9,994 rows). Re-run that script to regenerate this file.
+superstore <- read.csv("data/superstore_us_clean.csv", stringsAsFactors = FALSE)
 superstore$Order.Date <- as.Date(superstore$Order.Date)
 superstore$Year <- as.integer(format(superstore$Order.Date, "%Y"))
 
