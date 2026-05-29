@@ -1,549 +1,331 @@
-install.packages("DT")
-
 library(shiny)
 library(shinydashboard)
 library(ggplot2)
 library(dplyr)
 library(plotly)
 library(DT)
+library(scales)
 
+# ── Load datasets ──────────────────────────────────────────────────────────────
+superstore <- read.csv("clean_dashboard_data.csv", stringsAsFactors = FALSE)
+superstore$Order.Date <- as.Date(superstore$Order.Date)
+superstore$Year <- as.integer(format(superstore$Order.Date, "%Y"))
 
-# Load dataset
-final_data_us <- read.csv("clean_dashboard_data.csv")
+population <- read.csv("data/population_by_state.csv", stringsAsFactors = FALSE)
+income     <- read.csv("data/income_by_state.csv",     stringsAsFactors = FALSE)
+unemploy   <- read.csv("data/unemployment_by_state.csv", stringsAsFactors = FALSE)
 
-# Convert date
-final_data_us$Order.Date <- as.Date(final_data_us$Order.Date)
-final_data_us$Year <- format(final_data_us$Order.Date, "%Y")
+# State-level economic context (join on State)
+state_econ <- superstore %>%
+  group_by(State) %>%
+  summarise(
+    Total_Sales   = sum(Sales, na.rm = TRUE),
+    Total_Profit  = sum(Profit, na.rm = TRUE),
+    Avg_Discount  = mean(Discount, na.rm = TRUE),
+    Profit_Margin = sum(Profit) / sum(Sales),
+    .groups = "drop"
+  ) %>%
+  left_join(population, by = "State") %>%
+  left_join(income[, c("State","Median_Household_Income")], by = "State") %>%
+  left_join(unemploy[, c("State","Unemployment_Rate")], by = "State")
 
-# =========================
-# UI
-# =========================
-
+# ── UI ──────────────────────────────────────────────────────────────────────────
 ui <- dashboardPage(
-  
+  skin = "blue",
+
   dashboardHeader(
-    title = "Superstore Dashboard"
+    title = "Superstore Analysis"
   ),
-  
+
   dashboardSidebar(
-    
     sidebarMenu(
-      
-      menuItem(
-        "Overview",
-        tabName = "overview",
-        icon = icon("bar-chart")
-      ),
-      
-      menuItem(
-        "Data Table",
-        tabName = "datatable",
-        icon = icon("table")
-      )
-      
+      menuItem("Overview",          tabName = "overview",  icon = icon("chart-bar")),
+      menuItem("Economic Context",  tabName = "economic",  icon = icon("chart-line")),
+      menuItem("Data Table",        tabName = "datatable", icon = icon("table"))
     ),
-    
     br(),
-    
-    selectInput(
-      "region",
-      "Select Region:",
-      choices = c("All", unique(final_data_us$Region)),
-      selected = "All"
-    ),
-    
-    selectInput(
-      "category",
-      "Select Category:",
-      choices = c("All", unique(final_data_us$Category)),
-      selected = "All"
-    ),
-    
-    selectInput(
-      "segment",
-      "Select Segment:",
-      choices = c("All", unique(final_data_us$Segment)),
-      selected = "All"
-    ),
-    
-    selectInput(
-      "state",
-      "Select State:",
-      choices = c("All", unique(final_data_us$State)),
-      selected = "All"
-    ),
-    
-    selectInput(
-      "shipmode",
-      "Select Ship Mode:",
-      choices = c("All", unique(final_data_us$Ship.Mode)),
-      selected = "All"
-    ),
-    
-    sliderInput(
-      "year",
-      "Select Year:",
-      min = min(as.numeric(final_data_us$Year)),
-      max = max(as.numeric(final_data_us$Year)),
-      value = c(
-        min(as.numeric(final_data_us$Year)),
-        max(as.numeric(final_data_us$Year))
-      ),
-      sep = ""
+    selectInput("region",   "Region:",   choices = c("All", sort(unique(superstore$Region))),   selected = "All"),
+    selectInput("category", "Category:", choices = c("All", sort(unique(superstore$Category))), selected = "All"),
+    selectInput("segment",  "Segment:",  choices = c("All", sort(unique(superstore$Segment))),  selected = "All"),
+    selectInput("state",    "State:",    choices = c("All", sort(unique(superstore$State))),     selected = "All"),
+    selectInput("shipmode", "Ship Mode:",choices = c("All", sort(unique(superstore$Ship.Mode))), selected = "All"),
+    sliderInput("year", "Year Range:",
+      min = min(superstore$Year), max = max(superstore$Year),
+      value = c(min(superstore$Year), max(superstore$Year)),
+      step = 1, sep = ""
     )
-    
   ),
-  
+
   dashboardBody(
-    
+    tags$head(tags$style(HTML("
+      .research-question { background:#1a5276; color:white; padding:12px 18px;
+        border-radius:4px; margin-bottom:16px; font-size:14px; }
+      .research-question strong { font-size:15px; }
+      .no-data-msg { text-align:center; color:#888; padding:60px 20px; font-size:16px; }
+    "))),
+
     tabItems(
-      
-      # =========================
-      # OVERVIEW TAB
-      # =========================
-      
-      tabItem(
-        tabName = "overview",
-        
-        fluidRow(
-          box(
-            width = 12,
-            status = "primary",
-            solidHeader = TRUE,
-            title = NULL,
-            
-            h1(
-              "Superstore Sales Performance Dashboard",
-              style = "font-weight:bold;"
-            ),
-            
-            h4(
-              "Interactive Business Intelligence Dashboard using R Shiny",
-              style = "color:gray;"
-            )
-          )
+
+      # ── OVERVIEW TAB ──────────────────────────────────────────────────────────
+      tabItem(tabName = "overview",
+
+        div(class = "research-question",
+          strong("Research Question: "),
+          "How do US state-level socioeconomic factors — population size, household income,
+           and unemployment rate — relate to retail sales performance, profitability, and
+           discount patterns across regions in the Superstore dataset (2011–2014)?"
         ),
-        
+
         fluidRow(
           valueBoxOutput("salesBox"),
           valueBoxOutput("profitBox"),
-          valueBoxOutput("ordersBox")
-        ),
-        
-        fluidRow(
+          valueBoxOutput("ordersBox"),
           valueBoxOutput("discountBox"),
           valueBoxOutput("marginBox")
         ),
-        
+
         fluidRow(
-          
-          box(
-            plotlyOutput("topSalesPlot"),
-            width = 6
-          ),
-          
-          box(
-            plotlyOutput("discountProfitPlot"),
-            width = 6
-          )
-          
+          # Chart 1: Top States by Sales (bar)
+          box(title = "Fig 1 — Top 10 States by Sales", width = 6, status = "primary", solidHeader = TRUE,
+              plotlyOutput("topSalesPlot", height = "320px")),
+          # Chart 2: Discount vs Profit Margin (scatter)
+          box(title = "Fig 2 — Discount Rate vs Profit Margin", width = 6, status = "warning", solidHeader = TRUE,
+              plotlyOutput("discountProfitPlot", height = "320px"))
         ),
-        
+
         fluidRow(
-          
-          box(
-            plotlyOutput("salesTrendPlot"),
-            width = 6
-          ),
-          
-          box(
-            plotlyOutput("pieChart"),
-            width = 6
-          )
-          
+          # Chart 3: Sales & Profit Trend (line — proper dual-axis)
+          box(title = "Fig 3 — Annual Sales and Profit Trend", width = 6, status = "success", solidHeader = TRUE,
+              plotlyOutput("salesTrendPlot", height = "320px")),
+          # Chart 4: Category Sales Share (pie)
+          box(title = "Fig 4 — Category Sales Share", width = 6, status = "info", solidHeader = TRUE,
+              plotlyOutput("pieChart", height = "320px"))
         ),
-        
+
         fluidRow(
-          
-          box(
-            plotlyOutput("heatmapPlot"),
-            width = 12
-          )
-          
-        ),
-        
-        fluidRow(
-          
-          box(
-            plotlyOutput("segmentPlot"),
-            width = 12
-          )
-          
+          # Chart 5: Sales Heatmap by Region × Category
+          box(title = "Fig 5 — Sales Heatmap: Region × Category", width = 12, status = "danger", solidHeader = TRUE,
+              plotlyOutput("heatmapPlot", height = "320px"))
         )
-        
       ),
-      
-      # =========================
-      # DATA TABLE TAB
-      # =========================
-      
-      tabItem(
-        tabName = "datatable",
-        
+
+      # ── ECONOMIC CONTEXT TAB ─────────────────────────────────────────────────
+      tabItem(tabName = "economic",
+
+        div(class = "research-question",
+          strong("External Data Context: "),
+          "State-level profiles from US Census Bureau (population & income, ACS 2022)
+           and Bureau of Labor Statistics (unemployment, 2022) are used as contextual
+           indicators alongside Superstore retail performance (2011–2014)."
+        ),
+
         fluidRow(
-          
-          box(
-            title = "Interactive Data Table",
-            width = 12,
-            status = "primary",
-            solidHeader = TRUE,
-            
-            DTOutput("dataTable")
-          )
-          
+          box(title = "Median Household Income vs State Sales", width = 6, status = "primary", solidHeader = TRUE,
+              plotlyOutput("incomeSalesPlot", height = "340px")),
+          box(title = "Unemployment Rate vs Profit Margin", width = 6, status = "warning", solidHeader = TRUE,
+              plotlyOutput("unempProfitPlot", height = "340px"))
+        ),
+
+        fluidRow(
+          box(title = "Population vs Total Sales by State", width = 12, status = "success", solidHeader = TRUE,
+              plotlyOutput("popSalesPlot", height = "340px"))
         )
-        
+      ),
+
+      # ── DATA TABLE TAB ───────────────────────────────────────────────────────
+      tabItem(tabName = "datatable",
+        fluidRow(
+          box(title = "Filtered Transaction Data", width = 12, status = "primary", solidHeader = TRUE,
+              DTOutput("dataTable"))
+        )
       )
-      
     )
-    
   )
 )
 
-# =========================
-# SERVER
-# =========================
-
+# ── SERVER ──────────────────────────────────────────────────────────────────────
 server <- function(input, output) {
-  
-  filtered_data <- reactive({
-    
-    data <- final_data_us
-    
-    if(input$region != "All"){
-      data <- data %>%
-        filter(Region == input$region)
-    }
-    
-    if(input$category != "All"){
-      data <- data %>%
-        filter(Category == input$category)
-    }
-    
-    if(input$segment != "All"){
-      data <- data %>%
-        filter(Segment == input$segment)
-    }
-    
-    if(input$state != "All"){
-      data <- data %>%
-        filter(State == input$state)
-    }
-    
-    if(input$shipmode != "All"){
-      data <- data %>%
-        filter(Ship.Mode == input$shipmode)
-    }
-    
-    data <- data %>%
-      filter(
-        as.numeric(Year) >= input$year[1],
-        as.numeric(Year) <= input$year[2]
-      )
-    
-    return(data)
-    
-  })
-  
-  # =========================
-  # KPI BOXES
-  # =========================
-  
-  output$salesBox <- renderValueBox({
-    
-    valueBox(
-      paste0("$", round(sum(filtered_data()$Sales))),
-      "Total Sales",
-      icon = icon("dollar-sign"),
-      color = "blue"
-    )
-    
-  })
-  
-  output$profitBox <- renderValueBox({
-    
-    valueBox(
-      round(sum(filtered_data()$Profit)),
-      "Total Profit",
-      icon = icon("line-chart"),
-      color = "green"
-    )
-    
-  })
-  
-  output$ordersBox <- renderValueBox({
-    
-    valueBox(
-      nrow(filtered_data()),
-      "Total Orders",
-      icon = icon("shopping-cart"),
-      color = "orange"
-    )
-    
-  })
-  
-  output$discountBox <- renderValueBox({
-    
-    valueBox(
-      round(mean(filtered_data()$Discount), 2),
-      "Average Discount",
-      icon = icon("percent"),
-      color = "red"
-    )
-    
-  })
-  
-  output$marginBox <- renderValueBox({
-    
-    margin <- sum(filtered_data()$Profit) /
-      sum(filtered_data()$Sales)
-    
-    valueBox(
-      paste0(round(margin * 100, 2), "%"),
-      "Profit Margin",
-      icon = icon("pie-chart"),
-      color = "purple"
-    )
-    
-  })
-  
-  # =========================
-  # TOP SALES PLOT
-  # =========================
-  
-  output$topSalesPlot <- renderPlotly({
-    
-    top_sales_data <- filtered_data() %>%
-      group_by(State) %>%
-      summarise(
-        Total_Sales = sum(Sales),
-        .groups = "drop"
-      ) %>%
-      arrange(desc(Total_Sales)) %>%
-      slice(1:10)
-    
-    p <- ggplot(
-      top_sales_data,
-      aes(
-        x = reorder(State, Total_Sales),
-        y = Total_Sales
-      )
-    ) +
-      geom_col(fill = "steelblue") +
-      coord_flip() +
-      labs(
-        title = "Top 10 States by Sales",
-        x = "State",
-        y = "Total Sales"
-      ) +
-      theme_minimal()
-    
-    ggplotly(p)
-    
-  })
-  
-  # =========================
-  # DISCOUNT VS PROFIT
-  # =========================
-  
-  output$discountProfitPlot <- renderPlotly({
-    
-    p <- ggplot(
-      filtered_data(),
-      aes(
-        x = Discount,
-        y = Profit
-      )
-    ) +
-      geom_point(
-        color = "darkred",
-        alpha = 0.5
-      ) +
-      labs(
-        title = "Discount vs Profit",
-        x = "Discount",
-        y = "Profit"
-      ) +
-      theme_minimal()
-    
-    ggplotly(p)
-    
-  })
-  
-  # =========================
-  # SALES & PROFIT TREND
-  # =========================
-  
-  output$salesTrendPlot <- renderPlotly({
-    
-    trend_data <- filtered_data() %>%
-      group_by(Year) %>%
-      summarise(
-        Total_Sales = sum(Sales),
-        Total_Profit = sum(Profit),
-        .groups = "drop"
-      )
-    
-    p <- ggplot(trend_data, aes(x = as.numeric(Year))) +
-      
-      geom_line(
-        aes(y = Total_Sales, color = "Sales"),
-        linewidth = 1.5
-      ) +
-      
-      geom_point(
-        aes(y = Total_Sales, color = "Sales"),
-        size = 3
-      ) +
-      
-      geom_line(
-        aes(y = Total_Profit * 10, color = "Profit"),
-        linewidth = 1.5
-      ) +
-      
-      geom_point(
-        aes(y = Total_Profit * 10, color = "Profit"),
-        size = 3
-      ) +
-      
-      scale_color_manual(
-        values = c(
-          "Sales" = "darkgreen",
-          "Profit" = "blue"
-        )
-      ) +
-      
-      labs(
-        title = "Sales and Profit Trend Over Time",
-        x = "Year",
-        y = "Value",
-        color = "Metric"
-      ) +
-      
-      theme_minimal()
-    
-    ggplotly(p)
-    
-  })
-  
-  # =========================
-  # CATEGORY PIE CHART
-  # =========================
-  
-  output$pieChart <- renderPlotly({
-    
-    category_sales <- filtered_data() %>%
-      group_by(Category) %>%
-      summarise(
-        Total_Sales = sum(Sales),
-        .groups = "drop"
-      )
-    
-    plot_ly(
-      category_sales,
-      labels = ~Category,
-      values = ~Total_Sales,
-      type = "pie"
-    )
-    
-  })
-  
-  # =========================
-  # HEATMAP
-  # =========================
-  
-  output$heatmapPlot <- renderPlotly({
-    
-    heatmap_data <- filtered_data() %>%
-      group_by(Region, Category) %>%
-      summarise(
-        Total_Sales = sum(Sales),
-        .groups = "drop"
-      )
-    
-    p <- ggplot(
-      heatmap_data,
-      aes(
-        x = Category,
-        y = Region,
-        fill = Total_Sales
-      )
-    ) +
-      geom_tile() +
-      labs(
-        title = "Sales Heatmap by Region and Category",
-        x = "Category",
-        y = "Region"
-      ) +
-      theme_minimal()
-    
-    ggplotly(p)
-    
-  })
-  
-  # =========================
-  # CUSTOMER SEGMENT
-  # =========================
-  
-  output$segmentPlot <- renderPlotly({
-    
-    segment_data <- filtered_data() %>%
-      group_by(Segment) %>%
-      summarise(
-        Total_Profit = sum(Profit),
-        .groups = "drop"
-      )
-    
-    p <- ggplot(
-      segment_data,
-      aes(
-        x = Segment,
-        y = Total_Profit,
-        fill = Segment
-      )
-    ) +
-      geom_col() +
-      labs(
-        title = "Profit by Customer Segment",
-        x = "Segment",
-        y = "Total Profit"
-      ) +
-      theme_minimal()
-    
-    ggplotly(p)
-    
-  })
-  
-  # =========================
-  # DATA TABLE
-  # =========================
-  
-  output$dataTable <- renderDT({
-    
-    datatable(
-      filtered_data(),
-      options = list(
-        pageLength = 10,
-        scrollX = TRUE
-      )
-    )
-    
-  })
-  
-}
 
-# =========================
-# RUN APP
-# =========================
+  filtered <- reactive({
+    d <- superstore
+    if (input$region   != "All") d <- filter(d, Region   == input$region)
+    if (input$category != "All") d <- filter(d, Category == input$category)
+    if (input$segment  != "All") d <- filter(d, Segment  == input$segment)
+    if (input$state    != "All") d <- filter(d, State    == input$state)
+    if (input$shipmode != "All") d <- filter(d, Ship.Mode == input$shipmode)
+    d <- filter(d, Year >= input$year[1], Year <= input$year[2])
+    d
+  })
+
+  no_data_plot <- function() {
+    plotly_empty() %>% layout(title = list(text = "No data for current filter selection", font = list(color = "#888")))
+  }
+
+  # ── KPI Boxes ────────────────────────────────────────────────────────────────
+  output$salesBox <- renderValueBox({
+    valueBox(dollar(round(sum(filtered()$Sales))), "Total Sales", icon("dollar-sign"), color = "blue")
+  })
+  output$profitBox <- renderValueBox({
+    pval <- sum(filtered()$Profit)
+    valueBox(dollar(round(pval)), "Total Profit", icon("chart-line"), color = if(pval >= 0) "green" else "red")
+  })
+  output$ordersBox <- renderValueBox({
+    valueBox(comma(nrow(filtered())), "Total Orders", icon("shopping-cart"), color = "orange")
+  })
+  output$discountBox <- renderValueBox({
+    valueBox(percent(mean(filtered()$Discount, na.rm = TRUE), accuracy = 0.1), "Avg Discount", icon("percent"), color = "red")
+  })
+  output$marginBox <- renderValueBox({
+    m <- sum(filtered()$Profit) / sum(filtered()$Sales)
+    valueBox(percent(m, accuracy = 0.1), "Profit Margin", icon("pie-chart"), color = "purple")
+  })
+
+  # ── Chart 1: Top 10 States by Sales (bar) ────────────────────────────────────
+  output$topSalesPlot <- renderPlotly({
+    d <- filtered()
+    if (nrow(d) == 0) return(no_data_plot())
+    top10 <- d %>%
+      group_by(State) %>%
+      summarise(Total_Sales = sum(Sales), .groups = "drop") %>%
+      arrange(desc(Total_Sales)) %>%
+      slice_head(n = 10)
+    p <- ggplot(top10, aes(x = reorder(State, Total_Sales), y = Total_Sales,
+                           text = paste0(State, ": ", dollar(round(Total_Sales))))) +
+      geom_col(fill = "#2980b9") +
+      coord_flip() +
+      scale_y_continuous(labels = dollar_format(scale = 1e-3, suffix = "K")) +
+      labs(x = NULL, y = "Total Sales (USD)") +
+      theme_minimal(base_size = 11)
+    ggplotly(p, tooltip = "text")
+  })
+
+  # ── Chart 2: Discount vs Profit Margin (scatter) ──────────────────────────────
+  output$discountProfitPlot <- renderPlotly({
+    d <- filtered()
+    if (nrow(d) == 0) return(no_data_plot())
+    p <- ggplot(d, aes(x = Discount, y = Profit_Margin, color = Category,
+                       text = paste0("Discount: ", percent(Discount, 1),
+                                     "<br>Margin: ", percent(Profit_Margin, 0.1),
+                                     "<br>Category: ", Category))) +
+      geom_point(alpha = 0.35, size = 1.2) +
+      geom_smooth(method = "lm", se = FALSE, linewidth = 0.8) +
+      scale_x_continuous(labels = percent_format()) +
+      scale_y_continuous(labels = percent_format()) +
+      labs(x = "Discount Rate", y = "Profit Margin", color = NULL) +
+      theme_minimal(base_size = 11)
+    ggplotly(p, tooltip = "text")
+  })
+
+  # ── Chart 3: Annual Sales & Profit Trend (dual-axis line) ─────────────────────
+  output$salesTrendPlot <- renderPlotly({
+    d <- filtered()
+    if (nrow(d) == 0) return(no_data_plot())
+    trend <- d %>%
+      group_by(Year) %>%
+      summarise(Total_Sales = sum(Sales), Total_Profit = sum(Profit), .groups = "drop")
+    plot_ly(trend, x = ~Year) %>%
+      add_trace(y = ~Total_Sales,  name = "Sales",  type = "scatter", mode = "lines+markers",
+                line = list(color = "#27ae60", width = 2), marker = list(size = 6)) %>%
+      add_trace(y = ~Total_Profit, name = "Profit", type = "scatter", mode = "lines+markers",
+                line = list(color = "#2980b9", width = 2, dash = "dot"), marker = list(size = 6),
+                yaxis = "y2") %>%
+      layout(
+        yaxis  = list(title = "Total Sales (USD)", tickformat = "$,.0f"),
+        yaxis2 = list(title = "Total Profit (USD)", overlaying = "y", side = "right", tickformat = "$,.0f"),
+        xaxis  = list(title = "Year", dtick = 1),
+        legend = list(orientation = "h", x = 0, y = -0.2)
+      )
+  })
+
+  # ── Chart 4: Category Sales Share (pie) ──────────────────────────────────────
+  output$pieChart <- renderPlotly({
+    d <- filtered()
+    if (nrow(d) == 0) return(no_data_plot())
+    cat_sales <- d %>%
+      group_by(Category) %>%
+      summarise(Total_Sales = sum(Sales), .groups = "drop")
+    plot_ly(cat_sales, labels = ~Category, values = ~Total_Sales, type = "pie",
+            textinfo = "label+percent",
+            marker = list(colors = c("#2980b9", "#27ae60", "#e74c3c")))
+  })
+
+  # ── Chart 5: Heatmap (Region × Category) ─────────────────────────────────────
+  output$heatmapPlot <- renderPlotly({
+    d <- filtered()
+    if (nrow(d) == 0) return(no_data_plot())
+    hm <- d %>%
+      group_by(Region, Category) %>%
+      summarise(Total_Sales = sum(Sales), .groups = "drop")
+    p <- ggplot(hm, aes(x = Category, y = Region, fill = Total_Sales,
+                        text = paste0(Region, " / ", Category, ": ", dollar(round(Total_Sales))))) +
+      geom_tile(color = "white") +
+      scale_fill_gradient(low = "#d6eaf8", high = "#1a5276", labels = dollar_format(scale = 1e-3, suffix = "K")) +
+      labs(x = "Category", y = "Region", fill = "Sales (USD)") +
+      theme_minimal(base_size = 12)
+    ggplotly(p, tooltip = "text")
+  })
+
+  # ── Economic Context Charts ───────────────────────────────────────────────────
+  output$incomeSalesPlot <- renderPlotly({
+    d <- state_econ
+    if (nrow(d) == 0 || all(is.na(d$Median_Household_Income))) return(no_data_plot())
+    p <- ggplot(d, aes(x = Median_Household_Income, y = Total_Sales,
+                       text = paste0(State, "<br>Income: ", dollar(Median_Household_Income),
+                                     "<br>Sales: ", dollar(round(Total_Sales))))) +
+      geom_point(aes(color = Total_Sales), size = 3, alpha = 0.85) +
+      geom_smooth(method = "lm", se = TRUE, color = "#e74c3c", linewidth = 1) +
+      scale_x_continuous(labels = dollar_format()) +
+      scale_y_continuous(labels = dollar_format(scale = 1e-3, suffix = "K")) +
+      scale_color_gradient(low = "#aed6f1", high = "#1a5276") +
+      labs(x = "Median Household Income (USD, 2022)", y = "Total Retail Sales (USD)", color = "Sales") +
+      theme_minimal(base_size = 11) + theme(legend.position = "none")
+    ggplotly(p, tooltip = "text")
+  })
+
+  output$unempProfitPlot <- renderPlotly({
+    d <- state_econ
+    if (nrow(d) == 0 || all(is.na(d$Unemployment_Rate))) return(no_data_plot())
+    p <- ggplot(d, aes(x = Unemployment_Rate, y = Profit_Margin,
+                       text = paste0(State, "<br>Unemployment: ", Unemployment_Rate, "%",
+                                     "<br>Profit Margin: ", percent(Profit_Margin, 0.1)))) +
+      geom_point(aes(color = Profit_Margin), size = 3, alpha = 0.85) +
+      geom_smooth(method = "lm", se = TRUE, color = "#e67e22", linewidth = 1) +
+      scale_x_continuous(labels = function(x) paste0(x, "%")) +
+      scale_y_continuous(labels = percent_format()) +
+      scale_color_gradient2(low = "#e74c3c", mid = "#f9e79f", high = "#27ae60", midpoint = 0.1) +
+      labs(x = "Unemployment Rate (%, 2022)", y = "Profit Margin", color = NULL) +
+      theme_minimal(base_size = 11) + theme(legend.position = "none")
+    ggplotly(p, tooltip = "text")
+  })
+
+  output$popSalesPlot <- renderPlotly({
+    d <- state_econ
+    if (nrow(d) == 0 || all(is.na(d$Population_2024))) return(no_data_plot())
+    p <- ggplot(d, aes(x = Population_2024 / 1e6, y = Total_Sales,
+                       text = paste0(State, "<br>Population: ", round(Population_2024 / 1e6, 1), "M",
+                                     "<br>Sales: ", dollar(round(Total_Sales))))) +
+      geom_point(aes(color = Profit_Margin, size = Total_Sales), alpha = 0.8) +
+      geom_smooth(method = "lm", se = FALSE, color = "#8e44ad", linewidth = 1) +
+      scale_x_continuous(labels = function(x) paste0(x, "M")) +
+      scale_y_continuous(labels = dollar_format(scale = 1e-3, suffix = "K")) +
+      scale_color_gradient(low = "#e74c3c", high = "#27ae60") +
+      scale_size(range = c(2, 10), guide = "none") +
+      labs(x = "State Population (millions, 2024)", y = "Total Retail Sales (USD)", color = "Profit Margin") +
+      theme_minimal(base_size = 11)
+    ggplotly(p, tooltip = "text")
+  })
+
+  # ── Data Table ───────────────────────────────────────────────────────────────
+  output$dataTable <- renderDT({
+    d <- filtered()
+    if (nrow(d) == 0) return(datatable(data.frame(Message = "No data for current filter selection")))
+    datatable(
+      d %>% select(Order.Date, Region, State, Category, Sub.Category, Segment,
+                   Ship.Mode, Sales, Profit, Discount, Profit_Margin),
+      options = list(pageLength = 15, scrollX = TRUE),
+      rownames = FALSE
+    )
+  })
+}
 
 shinyApp(ui, server)
