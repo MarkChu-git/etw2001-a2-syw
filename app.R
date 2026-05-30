@@ -20,30 +20,9 @@ population <- read.csv("data/population_by_state.csv",   stringsAsFactors = FALS
 income     <- read.csv("data/income_by_state.csv",       stringsAsFactors = FALSE)
 unemploy   <- read.csv("data/unemployment_by_state.csv", stringsAsFactors = FALSE)
 
-# Collapse the State+Year series to one 2011-2014 average per state, so each state
-# contributes a single point to the cross-sectional economic-context charts.
-econ_profile <- population %>%
+external_econ <- population %>%
   left_join(income,   by = c("State", "Year")) %>%
-  left_join(unemploy, by = c("State", "Year")) %>%
-  group_by(State) %>%
-  summarise(
-    Population              = mean(Population, na.rm = TRUE),
-    Median_Household_Income = mean(Median_Household_Income, na.rm = TRUE),
-    Unemployment_Rate       = mean(Unemployment_Rate, na.rm = TRUE),
-    .groups = "drop"
-  )
-
-# State-level retail aggregates joined to the economic profile (join on State)
-state_econ <- superstore %>%
-  group_by(State) %>%
-  summarise(
-    Total_Sales   = sum(Sales, na.rm = TRUE),
-    Total_Profit  = sum(Profit, na.rm = TRUE),
-    Avg_Discount  = mean(Discount, na.rm = TRUE),
-    Profit_Margin = sum(Profit) / sum(Sales),
-    .groups = "drop"
-  ) %>%
-  left_join(econ_profile, by = "State")
+  left_join(unemploy, by = c("State", "Year"))
 
 # ── UI ──────────────────────────────────────────────────────────────────────────
 ui <- dashboardPage(
@@ -132,8 +111,8 @@ ui <- dashboardPage(
           strong("External Data Context: "),
           "State economic profiles — population (US Census Bureau PEP), median household
            income (US Census Bureau SAIPE), and unemployment rate (US BLS LAUS) — each
-           averaged over 2011–2014 to match the Superstore transactions, shown here
-           alongside state retail performance."
+           averaged over the selected year range and shown alongside the currently
+           filtered state retail performance."
         ),
 
         fluidRow(
@@ -174,26 +153,65 @@ server <- function(input, output) {
     d
   })
 
+  filtered_econ_profile <- reactive({
+    external_econ %>%
+      filter(Year >= input$year[1], Year <= input$year[2]) %>%
+      group_by(State) %>%
+      summarise(
+        Population              = mean(Population, na.rm = TRUE),
+        Median_Household_Income = mean(Median_Household_Income, na.rm = TRUE),
+        Unemployment_Rate       = mean(Unemployment_Rate, na.rm = TRUE),
+        .groups = "drop"
+      )
+  })
+
+  filtered_state_econ <- reactive({
+    d <- filtered()
+    if (nrow(d) == 0) {
+      return(data.frame())
+    }
+
+    d %>%
+      group_by(State) %>%
+      summarise(
+        Total_Sales   = sum(Sales, na.rm = TRUE),
+        Total_Profit  = sum(Profit, na.rm = TRUE),
+        Avg_Discount  = mean(Discount, na.rm = TRUE),
+        Profit_Margin = sum(Profit, na.rm = TRUE) / sum(Sales, na.rm = TRUE),
+        .groups = "drop"
+      ) %>%
+      left_join(filtered_econ_profile(), by = "State")
+  })
+
   no_data_plot <- function() {
     plotly_empty() %>% layout(title = list(text = "No data for current filter selection", font = list(color = "#888")))
   }
 
   # ── KPI Boxes ────────────────────────────────────────────────────────────────
   output$salesBox <- renderValueBox({
-    valueBox(dollar(round(sum(filtered()$Sales))), "Total Sales", icon("dollar-sign"), color = "blue")
+    d <- filtered()
+    if (nrow(d) == 0) return(valueBox("No data", "Total Sales", icon("dollar-sign"), color = "blue"))
+    valueBox(dollar(round(sum(d$Sales))), "Total Sales", icon("dollar-sign"), color = "blue")
   })
   output$profitBox <- renderValueBox({
-    pval <- sum(filtered()$Profit)
+    d <- filtered()
+    if (nrow(d) == 0) return(valueBox("No data", "Total Profit", icon("chart-line"), color = "red"))
+    pval <- sum(d$Profit)
     valueBox(dollar(round(pval)), "Total Profit", icon("chart-line"), color = if(pval >= 0) "green" else "red")
   })
   output$ordersBox <- renderValueBox({
-    valueBox(comma(nrow(filtered())), "Total Orders", icon("shopping-cart"), color = "orange")
+    d <- filtered()
+    valueBox(comma(nrow(d)), "Total Orders", icon("shopping-cart"), color = "orange")
   })
   output$discountBox <- renderValueBox({
-    valueBox(percent(mean(filtered()$Discount, na.rm = TRUE), accuracy = 0.1), "Avg Discount", icon("percent"), color = "red")
+    d <- filtered()
+    if (nrow(d) == 0) return(valueBox("No data", "Avg Discount", icon("percent"), color = "red"))
+    valueBox(percent(mean(d$Discount, na.rm = TRUE), accuracy = 0.1), "Avg Discount", icon("percent"), color = "red")
   })
   output$marginBox <- renderValueBox({
-    m <- sum(filtered()$Profit) / sum(filtered()$Sales)
+    d <- filtered()
+    if (nrow(d) == 0) return(valueBox("No data", "Profit Margin", icon("pie-chart"), color = "purple"))
+    m <- sum(d$Profit) / sum(d$Sales)
     valueBox(percent(m, accuracy = 0.1), "Profit Margin", icon("pie-chart"), color = "purple")
   })
 
@@ -255,7 +273,7 @@ server <- function(input, output) {
   })
 
   # ── Chart 4: Sales intensity vs economic context (external data — lollipop) ───
-  # Per-capita sales (population) with unemployment as colour and median income as
+  # Sales per 1,000 residents with unemployment as colour and median income as
   # point size, so all three external datasets appear in an Overview-tab chart.
   output$econLollipop <- renderPlotly({
     d <- filtered()
@@ -263,7 +281,7 @@ server <- function(input, output) {
     ld <- d %>%
       group_by(State) %>%
       summarise(Total_Sales = sum(Sales), .groups = "drop") %>%
-      left_join(econ_profile, by = "State") %>%
+      left_join(filtered_econ_profile(), by = "State") %>%
       filter(!is.na(Population)) %>%
       mutate(Sales_per_1k = Total_Sales / Population * 1000) %>%
       arrange(desc(Sales_per_1k)) %>%
@@ -304,51 +322,57 @@ server <- function(input, output) {
 
   # ── Economic Context Charts ───────────────────────────────────────────────────
   output$incomeSalesPlot <- renderPlotly({
-    d <- state_econ
+    d <- filtered_state_econ()
     if (nrow(d) == 0 || all(is.na(d$Median_Household_Income))) return(no_data_plot())
     p <- ggplot(d, aes(x = Median_Household_Income, y = Total_Sales,
                        text = paste0(State, "<br>Income: ", dollar(Median_Household_Income),
                                      "<br>Sales: ", dollar(round(Total_Sales))))) +
       geom_point(aes(color = Total_Sales), size = 3, alpha = 0.85) +
-      geom_smooth(method = "lm", se = TRUE, color = "#e74c3c", linewidth = 1) +
       scale_x_continuous(labels = dollar_format()) +
       scale_y_continuous(labels = dollar_format(scale = 1e-3, suffix = "K")) +
       scale_color_gradient(low = "#aed6f1", high = "#1a5276") +
-      labs(x = "Median Household Income (USD, 2011–2014 avg)", y = "Total Retail Sales (USD)", color = "Sales") +
+      labs(x = "Median Household Income (USD, selected-year avg)", y = "Total Retail Sales (USD)", color = "Sales") +
       theme_minimal(base_size = 11) + theme(legend.position = "none")
+    if (nrow(d) >= 3 && length(unique(d$Median_Household_Income)) >= 2) {
+      p <- p + geom_smooth(method = "lm", se = TRUE, color = "#e74c3c", linewidth = 1)
+    }
     ggplotly(p, tooltip = "text")
   })
 
   output$unempProfitPlot <- renderPlotly({
-    d <- state_econ
+    d <- filtered_state_econ()
     if (nrow(d) == 0 || all(is.na(d$Unemployment_Rate))) return(no_data_plot())
     p <- ggplot(d, aes(x = Unemployment_Rate, y = Profit_Margin,
                        text = paste0(State, "<br>Unemployment: ", round(Unemployment_Rate, 1), "%",
                                      "<br>Profit Margin: ", percent(Profit_Margin, 0.1)))) +
       geom_point(aes(color = Profit_Margin), size = 3, alpha = 0.85) +
-      geom_smooth(method = "lm", se = TRUE, color = "#e67e22", linewidth = 1) +
       scale_x_continuous(labels = function(x) paste0(x, "%")) +
       scale_y_continuous(labels = percent_format()) +
       scale_color_gradient2(low = "#e74c3c", mid = "#f9e79f", high = "#27ae60", midpoint = 0.1) +
-      labs(x = "Unemployment Rate (%, 2011–2014 avg)", y = "Profit Margin", color = NULL) +
+      labs(x = "Unemployment Rate (%, selected-year avg)", y = "Profit Margin", color = NULL) +
       theme_minimal(base_size = 11) + theme(legend.position = "none")
+    if (nrow(d) >= 3 && length(unique(d$Unemployment_Rate)) >= 2) {
+      p <- p + geom_smooth(method = "lm", se = TRUE, color = "#e67e22", linewidth = 1)
+    }
     ggplotly(p, tooltip = "text")
   })
 
   output$popSalesPlot <- renderPlotly({
-    d <- state_econ
+    d <- filtered_state_econ()
     if (nrow(d) == 0 || all(is.na(d$Population))) return(no_data_plot())
     p <- ggplot(d, aes(x = Population / 1e6, y = Total_Sales,
                        text = paste0(State, "<br>Population: ", round(Population / 1e6, 1), "M",
                                      "<br>Sales: ", dollar(round(Total_Sales))))) +
       geom_point(aes(color = Profit_Margin, size = Total_Sales), alpha = 0.8) +
-      geom_smooth(method = "lm", se = FALSE, color = "#8e44ad", linewidth = 1) +
       scale_x_continuous(labels = function(x) paste0(x, "M")) +
       scale_y_continuous(labels = dollar_format(scale = 1e-3, suffix = "K")) +
       scale_color_gradient(low = "#e74c3c", high = "#27ae60") +
       scale_size(range = c(2, 10), guide = "none") +
-      labs(x = "State Population (millions, 2011–2014 avg)", y = "Total Retail Sales (USD)", color = "Profit Margin") +
+      labs(x = "State Population (millions, selected-year avg)", y = "Total Retail Sales (USD)", color = "Profit Margin") +
       theme_minimal(base_size = 11)
+    if (nrow(d) >= 3 && length(unique(d$Population)) >= 2) {
+      p <- p + geom_smooth(method = "lm", se = FALSE, color = "#8e44ad", linewidth = 1)
+    }
     ggplotly(p, tooltip = "text")
   })
 
