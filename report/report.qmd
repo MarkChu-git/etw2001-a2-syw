@@ -1,8 +1,4 @@
 ---
-title: "Superstore Retail Performance and State-Level Socioeconomic Context"
-subtitle: "ETW2001 Assignment 2"
-author: "Yawen Sun  |  Student ID: 35734558"
-date: "May 2026"
 format:
   pdf:
     geometry: "top=1.8cm, bottom=1.8cm, left=2cm, right=2cm"
@@ -46,11 +42,13 @@ th <- theme_minimal(base_size=9) +
         plot.caption=element_text(size=7,colour="grey55"))
 ```
 
-\newpage
+**Superstore Retail Performance and State-Level Socioeconomic Context**
+
+Yawen Sun | Student ID: 35734558 | ETW2001 Assignment 2 | May 2026
 
 ## Page 1 — Dashboard Screenshot
 
-![R Shiny dashboard showing three interactive tabs — Overview (five core charts, six sidebar filters), Economic Context (three external-dataset charts), and Data Table. All visualisations update dynamically with filter changes.](dashboard_screenshot.png){width=100%}
+![R Shiny dashboard showing three interactive tabs — Overview (five core charts, six sidebar filters), Economic Context (three external-dataset charts), and Data Table. All visualisations update dynamically with filter changes.](dashboard_screenshot.png){width=85%}
 
 \newpage
 
@@ -203,6 +201,8 @@ This analysis asked whether state-level socioeconomic conditions are associated 
 **Discounting is the primary profitability lever.** Figure 2 presents the most operationally important finding: discount rate and profit margin are negatively associated across all product categories, most sharply in Furniture. This pattern is visible regardless of region or time period. Given that total sales grew consistently (Figure 3), the moderate overall profit margin (about 12%) is likely explained, at least in part, by widespread discount behaviour. Addressing discount depth in Furniture — where negative-margin transactions are common above 30% — represents the clearest near-term opportunity to improve returns.
 
 **Regional concentration creates both strength and vulnerability.** Figure 5 shows West and East regions dominating sales across all categories. This concentration reflects the *populations* of California, New York, and Washington far more than their prosperity — California's income ranks only 9th of 49. Because volume rests on a handful of large-population states, the business is disproportionately exposed to economic or competitive shifts in those markets. The South's relative Technology strength (Figure 5) and the Central region's lower saturation suggest expansion opportunities in underserved markets.
+
+\newpage
 
 ## Page 10 — Data Story (Part 2)
 
