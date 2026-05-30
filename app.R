@@ -113,9 +113,9 @@ ui <- dashboardPage(
           # Chart 3: Sales & Profit Trend (line — proper dual-axis)
           box(title = "Fig 3 — Annual Sales and Profit Trend", width = 6, status = "success", solidHeader = TRUE,
               plotlyOutput("salesTrendPlot", height = "320px")),
-          # Chart 4: Category Sales Share (pie)
-          box(title = "Fig 4 — Category Sales Share", width = 6, status = "info", solidHeader = TRUE,
-              plotlyOutput("pieChart", height = "320px"))
+          # Chart 4: Sales intensity vs economic context (external data — lollipop)
+          box(title = "Fig 4 — Sales Intensity vs Economic Context", width = 6, status = "info", solidHeader = TRUE,
+              plotlyOutput("econLollipop", height = "320px"))
         ),
 
         fluidRow(
@@ -254,16 +254,36 @@ server <- function(input, output) {
       )
   })
 
-  # ── Chart 4: Category Sales Share (pie) ──────────────────────────────────────
-  output$pieChart <- renderPlotly({
+  # ── Chart 4: Sales intensity vs economic context (external data — lollipop) ───
+  # Per-capita sales (population) with unemployment as colour and median income as
+  # point size, so all three external datasets appear in an Overview-tab chart.
+  output$econLollipop <- renderPlotly({
     d <- filtered()
     if (nrow(d) == 0) return(no_data_plot())
-    cat_sales <- d %>%
-      group_by(Category) %>%
-      summarise(Total_Sales = sum(Sales), .groups = "drop")
-    plot_ly(cat_sales, labels = ~Category, values = ~Total_Sales, type = "pie",
-            textinfo = "label+percent",
-            marker = list(colors = c("#2980b9", "#27ae60", "#e74c3c")))
+    ld <- d %>%
+      group_by(State) %>%
+      summarise(Total_Sales = sum(Sales), .groups = "drop") %>%
+      left_join(econ_profile, by = "State") %>%
+      filter(!is.na(Population)) %>%
+      mutate(Sales_per_1k = Total_Sales / Population * 1000) %>%
+      arrange(desc(Sales_per_1k)) %>%
+      slice_head(n = 15)
+    if (nrow(ld) == 0) return(no_data_plot())
+    ld$State <- factor(ld$State, levels = rev(ld$State))
+    p <- ggplot(ld, aes(x = State, y = Sales_per_1k,
+                        text = paste0(State,
+                                      "<br>Sales per 1,000: ", dollar(round(Sales_per_1k, 1)),
+                                      "<br>Unemployment: ", round(Unemployment_Rate, 1), "%",
+                                      "<br>Median income: ", dollar(round(Median_Household_Income)),
+                                      "<br>Population: ", comma(round(Population))))) +
+      geom_segment(aes(xend = State, y = 0, yend = Sales_per_1k), color = "grey75", linewidth = 0.6) +
+      geom_point(aes(color = Unemployment_Rate, size = Median_Household_Income)) +
+      coord_flip() +
+      scale_color_gradient(low = "#1a9850", high = "#c0392b") +
+      scale_size_continuous(range = c(3, 8), guide = "none") +
+      labs(x = NULL, y = "Sales per 1,000 residents (USD)", color = "Unemp %") +
+      theme_minimal(base_size = 11)
+    ggplotly(p, tooltip = "text")
   })
 
   # ── Chart 5: Heatmap (Region × Category) ─────────────────────────────────────
