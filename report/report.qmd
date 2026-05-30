@@ -27,12 +27,20 @@ ss$Year       <- as.integer(format(ss$Order.Date, "%Y"))
 pop  <- read.csv("../data/population_by_state.csv", stringsAsFactors=FALSE)
 inc  <- read.csv("../data/income_by_state.csv",     stringsAsFactors=FALSE)
 unemp<- read.csv("../data/unemployment_by_state.csv", stringsAsFactors=FALSE)
+# External series are State+Year (2011-2014); collapse to one per-state mean over
+# the analysis window, then join to the state retail aggregates on State.
+econ_profile <- pop %>%
+  left_join(inc,   by=c("State","Year")) %>%
+  left_join(unemp, by=c("State","Year")) %>%
+  group_by(State) %>%
+  summarise(Population=mean(Population),
+            Median_Household_Income=mean(Median_Household_Income),
+            Unemployment_Rate=mean(Unemployment_Rate), .groups="drop")
 econ <- ss %>% group_by(State) %>%
   summarise(Total_Sales=sum(Sales), Total_Profit=sum(Profit),
             Profit_Margin=sum(Profit)/sum(Sales), .groups="drop") %>%
-  left_join(pop,                              by="State") %>%
-  left_join(inc[,c("State","Median_Household_Income")],  by="State") %>%
-  left_join(unemp[,c("State","Unemployment_Rate")], by="State")
+  left_join(econ_profile, by="State") %>%
+  mutate(Sales_per_capita = Total_Sales / Population)
 th <- theme_minimal(base_size=9) +
   theme(plot.title=element_text(face="bold",size=10),
         plot.caption=element_text(size=7,colour="grey55"))
@@ -52,7 +60,7 @@ th <- theme_minimal(base_size=9) +
 
 Retail performance is influenced by both internal operations and external market conditions. States with larger populations, stronger consumer incomes, and lower unemployment are expected to generate higher demand and support healthier margins. This analysis contextualises Superstore transaction data with three authoritative external datasets to explore whether observable sales and profitability patterns are consistent with state-level economic characteristics.
 
-The study covers 49 US states and the District of Columbia across 2011–2014. External indicators are drawn from 2022–2024 sources; because state economic rankings are broadly stable over time, these are treated as contextual proxies rather than matched time-series predictors. All associations are descriptive — no causal claims are made.
+The study covers the 49 US jurisdictions represented in the Superstore data — the 48 contiguous states plus the District of Columbia — across 2011–2014. Each external indicator is drawn from the **same 2011–2014 window** and joined to the Superstore transactions on **State and Year**, so the economic context is matched to the analysis period rather than approximated from a later one. All associations are descriptive; no causal claims are made.
 
 **Scope:** Five visualisations address sales concentration, discount behaviour, time trends, category mix, and regional patterns. An Economic Context tab in the dashboard links Superstore performance directly to the three external datasets.
 
@@ -60,25 +68,30 @@ The study covers 49 US states and the District of Columbia across 2011–2014. E
 
 ## Page 3 — Dataset Selection
 
+**Superstore (primary).** 9,994 US retail orders, 2011–2014, from Assignment 1 (Sales, Profit, Discount, Category, Region, State, Order Date). Three external datasets supply the state economic context the transactions lack, each matched to the 2011–2014 window and joined on State and Year:
+
 ```{r provenance}
 prov <- data.frame(
-  Dataset=c("US State Population","Median Household Income","State Unemployment Rates"),
-  Source=c("US Census Bureau (NST-EST2025-POP)","US Census ACS 1-Year Estimates","BLS LAUS Program"),
-  Year=c("2024","2022","2022"), Unit=c("Persons","USD","% rate"),
-  `Join Key`=c("State","State","State"),
+  Dataset=c("Resident population by state","Median household income by state","State unemployment rate"),
+  Source=c("US Census Bureau (PEP)","US Census Bureau (SAIPE)","US BLS (LAUS)"),
+  Years=c("2011-2014","2011-2014","2011-2014"),
+  Unit=c("Persons","USD (current)","% labour force"),
+  `Join Key`=c("State + Year","State + Year","State + Year"),
   Justification=c(
-    "Population proxies market size; larger states expected to show higher absolute sales volumes.",
-    "Income reflects consumer spending capacity and is associated with demand for higher-margin goods.",
-    "Unemployment indicates economic stress; may correlate with compressed margins or discount pressure."
+    "Market-size denominator: lets sales be read per capita, not only in absolute terms.",
+    "Proxies household purchasing power against which sales and margins can be assessed.",
+    "Captures post-recession economic stress during 2011-2014 for comparison with margins."
   ), check.names=FALSE)
-kable(prov, caption="External Dataset Provenance", booktabs=TRUE)
+kable(prov, caption="External datasets, period-matched to 2011-2014 and joined on State and Year.", booktabs=TRUE)
 ```
+
+All three are authoritative US-government series, downloaded as key-free public files and rebuilt reproducibly by `scripts/prepare_external_data.R` (full provenance in `data/dataset_provenance.csv`). They complement Superstore by supplying the *demand context* — how many people, how prosperous, and how economically stressed each state was — that the transaction records alone do not contain.
 
 **References**
 
-US Census Bureau (2026). *Annual Estimates of the Resident Population: April 1, 2020 to July 1, 2025* (NST-EST2025-POP). https://www.census.gov/data/tables/time-series/demo/popest/2020s-state-total.html
-US Census Bureau (2023). *ACS 1-Year Estimates, Table B19013: Median Household Income*, 2022. https://data.census.gov
-US Bureau of Labor Statistics (2023). *LAUS State Annual Average Unemployment Rates*, 2022. https://www.bls.gov/lau/
+US Census Bureau, Population Division (2019). *Annual Estimates of the Resident Population for the United States, Regions, and States: 2010–2019* (NST-EST2019-alldata). https://www2.census.gov/programs-surveys/popest/datasets/2010-2019/national/totals/nst-est2019-alldata.csv (accessed 30 May 2026).
+US Census Bureau (2011–2014). *Small Area Income and Poverty Estimates (SAIPE): state median household income*. https://www.census.gov/programs-surveys/saipe/data/datasets.html (accessed 30 May 2026).
+US Bureau of Labor Statistics (2011–2014). *Local Area Unemployment Statistics (LAUS): statewide unemployment rates*. https://www.bls.gov/lau/ (accessed 30 May 2026).
 
 \newpage
 
@@ -89,11 +102,11 @@ top10 <- ss %>% group_by(State) %>% summarise(S=sum(Sales),.groups="drop") %>%
   arrange(desc(S)) %>% slice_head(n=10)
 ggplot(top10,aes(reorder(State,S),S))+geom_col(fill="#2980b9")+coord_flip()+
   scale_y_continuous(labels=dollar_format(scale=1e-3,suffix="K"))+
-  labs(title="Fig 1 — Top 10 States by Total Retail Sales (2011–2014)",
+  labs(title="Fig 1 - Top 10 States by Total Retail Sales (2011-2014)",
        x=NULL,y="Total Sales (USD thousands)",caption="Source: Superstore dataset.")+th
 ```
 
-**Interpretation.** California, New York, and Texas account for the largest share of total sales — a pattern consistent with their status as the three most populous US states (US Census Bureau, NST-EST2025-POP). Sales concentration in high-population states suggests that market size is a primary driver of retail volume. Pennsylvania and Florida outperform their population rank somewhat, possibly reflecting stronger logistics infrastructure or concentrated corporate buyer activity. For resource allocation, weighting operational investment toward large-population states is likely to maximise absolute return, though the Economic Context charts in the dashboard reveal that absolute sales do not guarantee proportionally higher margins.
+**Interpretation.** California, New York, and Texas account for the largest share of total sales — a pattern consistent with their status as the three most populous US states (US Census Bureau PEP, 2011–2014). Across all 49 states, state population and total sales are strongly correlated (r $\approx$ 0.90; see Figure 4 and the dashboard's Economic Context tab), so state population is the variable most strongly associated with retail volume. Pennsylvania and Florida outperform their population rank somewhat, possibly reflecting stronger logistics infrastructure or concentrated corporate buyer activity. For resource allocation, weighting operational investment toward large-population states is likely to maximise absolute return, though the Economic Context charts in the dashboard reveal that absolute sales do not guarantee proportionally higher margins.
 
 \newpage
 
@@ -105,7 +118,7 @@ ggplot(ss,aes(Discount,Profit_Margin,colour=Category))+
   scale_x_continuous(labels=percent_format())+
   scale_y_continuous(labels=percent_format(),limits=c(-2,1))+
   scale_colour_manual(values=c("#2980b9","#27ae60","#e74c3c"))+
-  labs(title="Fig 2 — Discount Rate vs Profit Margin by Category (2011–2014)",
+  labs(title="Fig 2 - Discount Rate vs Profit Margin by Category (2011-2014)",
        x="Discount Rate",y="Profit Margin",colour=NULL,
        caption="Source: Superstore dataset. Lines are OLS regression fits by category.")+th
 ```
@@ -127,7 +140,7 @@ ggplot(tr,aes(Year))+
   scale_colour_manual(values=c("Sales"="#27ae60","Profit"="#2980b9"))+
   scale_y_continuous(labels=dollar_format(scale=1e-3,suffix="K"))+
   scale_x_continuous(breaks=2011:2014)+
-  labs(title="Fig 3 — Annual Total Sales and Total Profit (2011–2014)",
+  labs(title="Fig 3 - Annual Total Sales and Total Profit (2011-2014)",
        x="Year",y="Amount (USD thousands)",colour=NULL,
        caption="Source: Superstore dataset. Both series on a common scale.")+
   th+theme(legend.position="bottom")
@@ -137,22 +150,27 @@ ggplot(tr,aes(Year))+
 
 \newpage
 
-## Page 7 — Visualisation 4: Category Sales Share
+## Page 7 — Visualisation 4: Sales Intensity vs State Economic Conditions
 
 ```{r fig4}
-cs <- ss %>% group_by(Category) %>% summarise(S=sum(Sales),.groups="drop") %>%
-  mutate(Pct=S/sum(S))
-ggplot(cs,aes("",S,fill=Category))+geom_col(width=1,colour="white")+
-  coord_polar(theta="y")+
-  scale_fill_manual(values=c("#2980b9","#27ae60","#e74c3c"))+
-  geom_text(aes(label=percent(Pct,0.1)),position=position_stack(vjust=0.5),
-            colour="white",size=3.5)+
-  labs(title="Fig 4 — Sales Share by Product Category (2011–2014)",fill=NULL,
-       caption="Source: Superstore dataset.")+
-  th+theme(axis.title=element_blank(),axis.text=element_blank(),panel.grid=element_blank())
+#| fig-height: 3.9
+intensity <- econ %>% filter(!is.na(Population)) %>%
+  arrange(desc(Sales_per_capita)) %>% slice_head(n=15)
+intensity$State <- factor(intensity$State, levels=rev(intensity$State))
+ggplot(intensity, aes(State, Sales_per_capita*1000))+
+  geom_segment(aes(xend=State, y=0, yend=Sales_per_capita*1000),
+               colour="grey75", linewidth=0.6)+
+  geom_point(aes(colour=Unemployment_Rate, size=Median_Household_Income))+
+  coord_flip()+
+  scale_colour_gradient(low="#1a9850", high="#c0392b", name="Unemp %")+
+  scale_size_continuous(range=c(2.3,6), labels=dollar_format(), name="Income")+
+  labs(title="Fig 4 - Sales Intensity vs State Economic Conditions (2011-2014)",
+       x=NULL, y="Sales per 1,000 residents (USD)",
+       caption="Sources: Superstore; US Census PEP/SAIPE; US BLS LAUS. Top 15 states shown.")+
+  th+theme(legend.position="right", legend.box="vertical")
 ```
 
-**Interpretation.** Technology products account for the largest sales share (~36%), followed by Furniture (~32%) and Office Supplies (~31%). This near-equal three-way split reflects a diversified revenue base. However, sales share diverges meaningfully from profitability contribution: as shown in Figure 2, Furniture carries the highest risk of margin erosion under discount conditions, despite representing nearly one-third of revenue. Office Supplies, with the smallest share, tends to benefit from higher transaction frequency and lower per-unit logistics costs. A category management strategy that reduces Furniture discount depth and sustains Technology growth is likely to improve overall profitability without requiring volume sacrifices.
+**Interpretation.** This chart is the report's direct test of whether state economic conditions track retail performance, and it combines all three external datasets at once: sales per 1,000 residents on the axis (population), colour for unemployment, and point size for median income. Sales intensity is highest in *small*-population states — Delaware, Rhode Island, Vermont — while the three largest absolute markets (California, New York, and Texas from Figure 1) fall to mid-table once population is divided out. Crucially, neither colour nor size forms a gradient down the ranking: low-unemployment Vermont (4.6%) and high-unemployment Rhode Island and California (9.7%) sit near the top together, and median income barely varies among the leaders. Across all 49 states these associations are weak (sales-per-capita with income r $\approx$ 0.23, with unemployment r $\approx$ 0.22), whereas absolute population explains absolute sales far better (r $\approx$ 0.90). The message is clear: *market size*, not local prosperity or labour-market health, is what tracks where Superstore sells — an insight visible only by joining the external data to the transactions.
 
 \newpage
 
@@ -165,12 +183,12 @@ ggplot(hm,aes(Category,Region,fill=S))+geom_tile(colour="white",linewidth=0.7)+
             colour="white",fontface="bold",size=3)+
   scale_fill_gradient(low="#d6eaf8",high="#1a5276",
                       labels=dollar_format(scale=1e-3,suffix="K"))+
-  labs(title="Fig 5 — Sales Heatmap by Region and Category (2011–2014)",
+  labs(title="Fig 5 - Sales Heatmap by Region and Category (2011-2014)",
        x="Category",y="Region",fill="Sales (USD)",
        caption="Source: Superstore dataset.")+th
 ```
 
-**Interpretation.** The West and East regions generate the highest total sales across all three categories, consistent with the economic context provided by the external datasets: California and New York — the two highest-revenue states in Figure 1 — contribute the majority of Western and Eastern regional totals respectively, and both states rank among the highest for median household income (US Census Bureau ACS, 2022). The South's relative strength in Technology is notable and may reflect faster technology adoption in southern metropolitan areas. Central region underperformance across all categories suggests potential for strategic expansion, particularly in Office Supplies where logistics efficiency advantages may reduce the cost of market entry.
+**Interpretation.** The West and East regions generate the highest total sales across all three categories, driven by the two largest absolute markets — California (West) and New York (East), the top two states in Figure 1. This regional concentration tracks population and market size rather than local prosperity: California's median household income ranks only 9th and New York's 15th of 49 (the highest-income states are Maryland, New Jersey, and Connecticut), and Figure 4 shows income and unemployment are only weakly associated with sales. The South's relative strength in Technology is notable and may reflect faster technology adoption in southern metropolitan areas. Central-region underperformance across all categories suggests potential for strategic expansion, particularly in Office Supplies where logistics-efficiency advantages may lower the cost of market entry.
 
 \newpage
 
@@ -180,23 +198,23 @@ ggplot(hm,aes(Category,Region,fill=S))+geom_tile(colour="white",linewidth=0.7)+
 
 This analysis asked whether state-level socioeconomic conditions are associated with Superstore retail performance. Across five visualisations and three external datasets, a coherent and actionable picture emerges.
 
-**Market size drives volume.** Figure 1 shows that sales are concentrated in California, New York, and Texas — the three most populous US states. The bubble chart in the Economic Context dashboard tab (Population vs Sales) confirms a positive association between state population and total sales volume. This is expected: more residents means a larger potential customer base. However, population alone does not explain margin quality. The scatter plot of income vs sales (Economic Context tab) shows that the relationship between household income and sales performance is more complex — some high-income states generate moderate volumes because they are smaller markets, while some lower-income states generate high volumes purely due to scale.
+**Population tracks volume — but prosperity does not.** Figure 1 shows sales concentrated in California, New York, and Texas, the three most populous US states, and the Population vs Sales bubble chart in the Economic Context tab shows a strong positive association (r $\approx$ 0.90). More residents means a larger customer base. Yet population is almost the *only* economic variable that tracks performance. Figure 4 shows that once sales are expressed per capita, neither median household income (r $\approx$ 0.23) nor unemployment (r $\approx$ 0.22) aligns with sales intensity, and income's association with margin is negligible (r $\approx$ 0.12). High-income states are not the heaviest buyers, and economically stressed states are not the lightest — Superstore's footprint follows headcount, not prosperity.
 
-**Discounting is the primary profitability lever.** Figure 2 presents the most operationally important finding: discount rate and profit margin are negatively associated across all product categories, most sharply in Furniture. This pattern is visible regardless of region or time period. Given that total sales grew consistently (Figure 3), the moderate overall profit margin (~12%) is likely explained, at least in part, by widespread discount behaviour. Addressing discount depth in Furniture — where negative-margin transactions are common above 30% — represents the clearest near-term opportunity to improve returns.
+**Discounting is the primary profitability lever.** Figure 2 presents the most operationally important finding: discount rate and profit margin are negatively associated across all product categories, most sharply in Furniture. This pattern is visible regardless of region or time period. Given that total sales grew consistently (Figure 3), the moderate overall profit margin (about 12%) is likely explained, at least in part, by widespread discount behaviour. Addressing discount depth in Furniture — where negative-margin transactions are common above 30% — represents the clearest near-term opportunity to improve returns.
 
-**Regional concentration creates both strength and vulnerability.** Figure 5 reveals that West and East regions dominate sales across all categories. This geographic concentration aligns with the higher household incomes and larger populations in California, New York, and Washington (Economic Context data, BLS and Census). While this concentration supports current performance, it also means the business is disproportionately exposed to economic or competitive changes in a small number of states. The South's relative Technology strength (Figure 5) and the Central region's lower saturation suggest expansion opportunities in underserved markets.
+**Regional concentration creates both strength and vulnerability.** Figure 5 shows West and East regions dominating sales across all categories. This concentration reflects the *populations* of California, New York, and Washington far more than their prosperity — California's income ranks only 9th of 49. Because volume rests on a handful of large-population states, the business is disproportionately exposed to economic or competitive shifts in those markets. The South's relative Technology strength (Figure 5) and the Central region's lower saturation suggest expansion opportunities in underserved markets.
 
 ## Page 10 — Data Story (Part 2)
 
-**Limitations.** The temporal mismatch between the 2022–2024 external data and 2011–2014 Superstore transactions means associations must be interpreted cautiously. External indicators serve as structural context, not matched predictors. Causality cannot be inferred from observational patterns. All findings are descriptive.
+**Limitations.** Four caveats apply. (1) *Ecological inference* — the external indicators are state aggregates joined to state retail totals, so associations describe states, not individual customers or orders. (2) *Per-capita artifact* — sales per 1,000 residents is inflated for small-population states and reflects Superstore's sampled footprint, which is not proportional to population; the per-capita leaders in Figure 4 should not be read as the "best" markets. (3) *Source nature* — SAIPE income is a modelled estimate and unemployment is a coincident indicator, so both contextualise rather than measure customer behaviour. (4) *Observational design* — margins also depend on cost structure, product mix, and discount policy that state economics does not capture, so no causal claims are made.
 
-**Recommendations.** Three evidence-grounded recommendations follow from the analysis:
+**Recommendations.** Three evidence-grounded recommendations follow:
 
-1. *Furniture discount guardrails* — Figure 2 shows that discounts above 20% are consistently associated with negative profit margins in Furniture. A policy capping approved discounts at 20% in this category is likely to protect margins without substantially reducing conversion.
+1. *Furniture discount guardrails* — Figure 2 shows discounts above 20% are consistently associated with negative Furniture margins. Capping approved discounts in this category is the clearest near-term lever to protect profit without materially reducing conversion.
 
-2. *South Technology expansion* — Figure 5 shows relative South strength in Technology. Coupling this with the BLS unemployment context (several southern states show low 2022 unemployment, signalling economic activity), a targeted Technology investment in southern states is supported by the data.
+2. *Do not equate large markets with healthy ones* — population predicts volume (r $\approx$ 0.90) but not profitability: 10 of the 49 states are loss-making, including Texas (margin −15%) despite low unemployment (6.5%). High-volume states should be audited for discount and margin discipline (Figure 2, Economic Context tab) rather than assumed healthy because they are large.
 
-3. *Data-driven territory planning* — The association between state population and sales volume (Figure 1, Economic Context) supports using state-level socioeconomic profiles as inputs to sales territory sizing and quota allocation, reducing over-reliance on historical patterns alone.
+3. *Size territories on population, not prosperity proxies* — because population correlates strongly with sales (r $\approx$ 0.90) while income and unemployment correlate weakly (r $\approx$ 0.2; Figure 4), state population is the more defensible input for territory sizing and quota allocation; local income and unemployment should be treated as minor adjustments, not primary drivers.
 
 \newpage
 
@@ -212,11 +230,11 @@ Chang, W., Cheng, J., Allaire, J., Sievert, C., et al. (2023). *shiny: Web Appli
 
 Sievert, C. (2020). *Interactive Web-Based Data Visualization with R, plotly, and shiny*. Chapman and Hall/CRC.
 
-US Bureau of Labor Statistics. (2023). *Local Area Unemployment Statistics (LAUS): State Annual Average Unemployment Rates, 2022*. US Dept of Labor. Retrieved May 2026, from https://www.bls.gov/lau/
+US Bureau of Labor Statistics. (2011–2014). *Local Area Unemployment Statistics (LAUS): statewide unemployment rates*. US Department of Labor. Retrieved 30 May 2026, from https://www.bls.gov/lau/
 
-US Census Bureau. (2023). *American Community Survey 1-Year Estimates, Table B19013: Median Household Income, 2022*. Retrieved May 2026, from https://data.census.gov
+US Census Bureau. (2011–2014). *Small Area Income and Poverty Estimates (SAIPE): state median household income*. Retrieved 30 May 2026, from https://www.census.gov/programs-surveys/saipe/data/datasets.html
 
-US Census Bureau, Population Division. (2026). *Annual Estimates of the Resident Population: April 1, 2020 to July 1, 2025* (NST-EST2025-POP). Retrieved May 2026, from https://www.census.gov/data/tables/time-series/demo/popest/2020s-state-total.html
+US Census Bureau, Population Division. (2019). *Annual Estimates of the Resident Population for the United States, Regions, and States: 2010–2019* (NST-EST2019-alldata). Retrieved 30 May 2026, from https://www2.census.gov/programs-surveys/popest/datasets/2010-2019/national/totals/nst-est2019-alldata.csv
 
 Wickham, H. (2016). *ggplot2: Elegant Graphics for Data Analysis*. Springer-Verlag. https://ggplot2.tidyverse.org
 
